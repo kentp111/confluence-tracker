@@ -1,14 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-scale="m">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Westmere Tracker</title>
+<title>The Confluence — Table Screen</title>
 <style>
   :root {
     --bg:        #0d1419;
     --panel:     #16212b;
     --panel-2:   #1e2c38;
+    --panel-3:   #142029;
     --line:      #2c3d4c;
     --line-soft: #223240;
     --ink:       #e7eef3;
@@ -16,27 +17,33 @@
     --ink-faint: #5f7585;
     --amber:     #e6a849;
     --amber-dim: #8a6a30;
+    --tide:      #4fb3b0;
+    --tide-dim:  #2b5f5e;
     --green:     #5bbf7a;
     --red:       #d8615c;
     --blue:      #5b9bd8;
     --radius:    10px;
     --shadow:    0 1px 0 rgba(255,255,255,0.03), 0 8px 24px rgba(0,0,0,0.35);
-  }
-  * { box-sizing: border-box; }
-  html, body { margin: 0; padding: 0; }
-  body {
-    background: var(--bg);
-    color: var(--ink);
-    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     font-size: 15px;
-    line-height: 1.4;
+  }
+  html[data-scale="m"] { font-size: 17px; }
+  html[data-scale="l"] { font-size: 19px; }
+  html[data-scale="xl"]{ font-size: 22px; }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 1rem; line-height: 1.35;
     -webkit-font-smoothing: antialiased;
+    display: flex; flex-direction: column; overflow: hidden;
   }
   h1, h2, h3 { margin: 0; font-weight: 650; }
   button {
     font: inherit; color: var(--ink); cursor: pointer;
     background: var(--panel-2); border: 1px solid var(--line);
-    border-radius: 8px; padding: 6px 11px;
+    border-radius: 8px; padding: 0.3rem 0.6rem;
   }
   button:hover { border-color: var(--amber-dim); }
   button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
@@ -45,843 +52,1127 @@
   input, select, textarea {
     font: inherit; color: var(--ink);
     background: #0e1820; border: 1px solid var(--line);
-    border-radius: 6px; padding: 5px 7px;
+    border-radius: 6px; padding: 0.2rem 0.35rem;
   }
-  input[type="number"] { width: 64px; }
-  /* hide native spin arrows — they reserve right-edge space and clip centered values */
   input[type="number"]::-webkit-inner-spin-button,
   input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; appearance: none; margin: 0; }
   input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
-  textarea { width: 100%; resize: vertical; min-height: 46px; }
+  textarea { width: 100%; resize: vertical; min-height: 2.4rem; }
   .muted { color: var(--ink-dim); }
   .faint { color: var(--ink-faint); }
-  .tiny { font-size: 12px; }
-  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .tiny  { font-size: 0.72rem; }
+  .row { display: flex; gap: 0.45rem; align-items: center; flex-wrap: wrap; }
   .spacer { flex: 1; }
+  .eyebrow { font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); font-weight: 650; }
 
-  /* ---- header ---- */
+  /* ================= header ================= */
   header {
-    position: sticky; top: 0; z-index: 20;
+    flex: none; z-index: 30;
     background: linear-gradient(180deg, #141f29 0%, #0f181f 100%);
     border-bottom: 1px solid var(--line);
-    padding: 12px 18px;
+    padding: 0.5rem 0.9rem;
+    display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap;
   }
-  .brand { display: flex; align-items: baseline; gap: 12px; }
-  .lamp {
-    width: 11px; height: 11px; border-radius: 50%;
-    background: var(--amber);
-    box-shadow: 0 0 10px 2px rgba(230,168,73,0.65);
-    align-self: center;
-  }
-  header h1 {
-    font-size: 19px; letter-spacing: 0.04em; text-transform: uppercase;
-    color: var(--ink);
-  }
+  .lamp { width: 0.65rem; height: 0.65rem; border-radius: 50%; background: var(--amber);
+          box-shadow: 0 0 10px 2px rgba(230,168,73,0.6); flex: none; }
+  header h1 { font-size: 1.05rem; letter-spacing: 0.06em; text-transform: uppercase; }
   header h1 b { color: var(--amber); font-weight: 650; }
-  .round-pill {
-    display: flex; align-items: center; gap: 8px;
-    background: var(--panel); border: 1px solid var(--line);
-    border-radius: 999px; padding: 4px 6px 4px 12px;
+  .scale-set { display: flex; gap: 2px; }
+  .scale-set button { padding: 0.2rem 0.5rem; font-size: 0.75rem; border-radius: 6px; }
+  .scale-set button.on { border-color: var(--amber); color: var(--amber); }
+  .btn-amber { border-color: var(--amber-dim); color: var(--amber); }
+  .btn-tide  { border-color: var(--tide-dim);  color: var(--tide); }
+  .save-status { font-size: 0.72rem; color: var(--ink-faint); }
+  .save-status.warn { color: var(--amber); }
+
+  /* ================= stage ================= */
+  .stage {
+    flex: 1; min-height: 0;
+    display: grid; grid-template-columns: clamp(340px, 33vw, 700px) 1fr;
+    gap: 0.6rem; padding: 0.6rem; overflow: hidden;
   }
-  .round-pill .n { font-variant-numeric: tabular-nums; font-weight: 650; min-width: 1.5ch; text-align: center; }
-
-  main { padding: 16px 18px 80px; max-width: 1180px; margin: 0 auto; }
-
-  /* ---- character grid ---- */
-  .chars { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 14px; }
-  .card {
+  .panel {
     background: var(--panel); border: 1px solid var(--line);
     border-radius: var(--radius); box-shadow: var(--shadow);
-    padding: 0; overflow: hidden;
+    display: flex; flex-direction: column; min-height: 0; overflow: hidden;
   }
-  .card.bloodied { border-color: #5a2f2c; }
-  .card.down { border-color: var(--red); }
-  .card-head {
-    display: flex; align-items: center; gap: 8px;
-    padding: 10px 12px; background: var(--panel-2);
+  .panel-head {
+    flex: none; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
+    padding: 0.4rem 0.65rem; background: var(--panel-2);
     border-bottom: 1px solid var(--line-soft);
   }
-  .name-input {
-    font-size: 16px; font-weight: 650; background: transparent; border: 1px solid transparent;
-    border-radius: 6px; padding: 3px 6px; flex: 1; min-width: 0;
-  }
-  .name-input:hover { border-color: var(--line); }
-  .ac {
-    display: flex; flex-direction: column; align-items: center;
-    line-height: 1; gap: 2px;
-  }
-  .ac input { width: 50px; text-align: center; font-weight: 650; }
-  .ac .lbl { font-size: 10px; letter-spacing: 0.08em; color: var(--ink-faint); text-transform: uppercase; }
-  .x-btn {
-    background: transparent; border: 1px solid transparent; color: var(--ink-faint);
-    padding: 2px 7px; border-radius: 6px;
-  }
-  .x-btn:hover { color: var(--red); border-color: #4a2926; background: #1c1416; }
+  .panel-head h2 { font-size: 0.78rem; letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-dim); }
+  .panel-head .dot { width: 0.5rem; height: 0.5rem; border-radius: 50%; flex: none; }
+  .dot.amber { background: var(--amber); }
+  .dot.tide  { background: var(--tide); }
+  .panel-body { flex: 1; min-height: 0; overflow: auto; padding: 0.6rem; }
 
-  .card-body { padding: 12px; display: flex; flex-direction: column; gap: 12px; }
+  /* ================= tracker cards ================= */
+  .chars { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 0.55rem; align-content: start; }
+  .card { background: var(--panel-3); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+  .card.bloodied { border-color: #5a2f2c; }
+  .card.down { border-color: var(--red); box-shadow: 0 0 0 1px rgba(216,97,92,0.35); }
+  .card-head { display: flex; align-items: center; gap: 0.4rem; padding: 0.35rem 0.5rem;
+               background: var(--panel-2); border-bottom: 1px solid var(--line-soft); }
+  .card-head .nm { font-size: 0.98rem; font-weight: 650; flex: 1; min-width: 0;
+                   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ac-box { display: flex; align-items: center; gap: 0.3rem; }
+  .ac-box input { width: 2.6rem; text-align: center; font-weight: 650; }
+  .ac-alt { font-size: 0.66rem; padding: 0.15rem 0.35rem; border-radius: 5px; }
+  .ac-alt.on { border-color: var(--blue); color: var(--blue); }
 
-  /* ---- HP ---- */
-  .hp-block { display: flex; align-items: center; gap: 12px; }
-  .hp-big { display: flex; align-items: baseline; gap: 3px; font-variant-numeric: tabular-nums; }
-  .hp-big .cur { font-size: 34px; font-weight: 700; }
-  .hp-big .sep { font-size: 20px; color: var(--ink-faint); }
-  .hp-big .max { font-size: 20px; color: var(--ink-dim); }
-  .hp-big .cur.ok { color: var(--green); }
-  .hp-big .cur.bloodied { color: var(--amber); }
-  .hp-big .cur.down { color: var(--red); }
-  .hp-edit { display: flex; flex-direction: column; gap: 5px; }
-  .hp-edit .row2 { display: flex; gap: 5px; align-items: center; }
-  .hp-edit input { width: 56px; text-align: center; }
-  .btn-dmg { border-color: #4a2926; }
-  .btn-dmg:hover { border-color: var(--red); }
-  .btn-heal { border-color: #2c4a36; }
-  .btn-heal:hover { border-color: var(--green); }
-  .temp {
-    display: inline-flex; align-items: center; gap: 5px;
-    background: #122230; border: 1px solid #25455e; border-radius: 6px; padding: 3px 7px;
-  }
-  .temp .lbl { font-size: 11px; color: var(--blue); letter-spacing: 0.04em; }
-  .temp input { width: 42px; text-align: center; }
-  .maxhp-edit { display: flex; align-items: center; gap: 5px; }
-  .maxhp-edit .lbl { font-size: 11px; color: var(--ink-faint); }
+  .card-body { padding: 0.5rem; display: flex; flex-direction: column; gap: 0.45rem; }
 
-  /* ---- pips ---- */
-  .res { display: flex; flex-direction: column; gap: 4px; }
-  .res-head { display: flex; align-items: center; gap: 6px; }
-  .res-name {
-    font-size: 13px; font-weight: 600; background: transparent; border: 1px solid transparent;
-    border-radius: 5px; padding: 2px 5px; flex: 1; min-width: 0;
-  }
-  .res-name:hover { border-color: var(--line); }
-  .reset-tag {
-    font-size: 10px; letter-spacing: 0.05em; text-transform: uppercase;
-    border-radius: 4px; padding: 1px 5px; cursor: pointer; user-select: none;
-    border: 1px solid var(--line); color: var(--ink-dim);
-  }
-  .reset-tag.short { color: var(--blue); border-color: #2c4a5e; }
-  .reset-tag.long  { color: var(--amber); border-color: var(--amber-dim); }
-  .reset-tag.none  { color: var(--ink-faint); }
-  .pips { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; }
-  .pip {
-    width: 20px; height: 20px; border-radius: 50%;
-    border: 2px solid var(--amber-dim); background: transparent;
-    padding: 0; transition: background .08s, border-color .08s;
-  }
+  .hp-block { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+  .hp-big { display: flex; align-items: baseline; gap: 0.15rem; font-variant-numeric: tabular-nums; }
+  .hp-big .cur { font-size: 2.1rem; font-weight: 700; line-height: 1; }
+  .hp-big .sep { font-size: 1.1rem; color: var(--ink-faint); }
+  .hp-big .max { font-size: 1.1rem; color: var(--ink-dim); }
+  .cur.ok { color: var(--green); } .cur.bloodied { color: var(--amber); } .cur.down { color: var(--red); }
+  .hp-ctl { display: flex; gap: 0.25rem; align-items: center; }
+  .hp-ctl input { width: 3rem; text-align: center; }
+  .btn-dmg { border-color: #4a2926; } .btn-dmg:hover { border-color: var(--red); }
+  .btn-heal { border-color: #2c4a36; } .btn-heal:hover { border-color: var(--green); }
+  .temp-chip { display: inline-flex; align-items: center; gap: 0.25rem;
+               background: #122230; border: 1px solid #25455e; border-radius: 6px; padding: 0.1rem 0.35rem; }
+  .temp-chip .l { font-size: 0.66rem; color: var(--blue); letter-spacing: 0.05em; }
+  .temp-chip input { width: 2.4rem; text-align: center; }
+
+  /* resources */
+  .res { display: flex; align-items: center; gap: 0.4rem; }
+  .res-name { font-size: 0.8rem; font-weight: 600; width: 8.6rem; flex: none;
+              overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tag { font-size: 0.6rem; letter-spacing: 0.06em; text-transform: uppercase;
+         border: 1px solid var(--line); border-radius: 4px; padding: 0 0.25rem; color: var(--ink-dim);
+         cursor: pointer; user-select: none; flex: none; }
+  .tag.short { color: var(--blue); border-color: #2c4a5e; }
+  .tag.long  { color: var(--amber); border-color: var(--amber-dim); }
+  .tag.none  { color: var(--ink-faint); }
+  .pips { display: flex; gap: 0.22rem; flex-wrap: wrap; align-items: center; }
+  .pip { width: 1.05rem; height: 1.05rem; border-radius: 50%; padding: 0;
+         border: 2px solid var(--amber-dim); background: transparent; }
   .pip.filled { background: var(--amber); border-color: var(--amber); box-shadow: 0 0 6px rgba(230,168,73,0.4); }
   .pip:hover { border-color: var(--amber); }
-  .pip-min { background: transparent; border: 1px solid var(--line); width: 22px; height: 22px; border-radius: 6px; color: var(--ink-dim); line-height: 1; padding: 0; }
-  .res-x { color: var(--ink-faint); border: none; background: transparent; padding: 0 4px; }
-  .res-x:hover { color: var(--red); }
+  .pip.sq { border-radius: 5px; border-color: var(--line); }
+  .pip.sq.succ.filled { background: var(--green); border-color: var(--green); }
+  .pip.sq.fail.filled { background: var(--red); border-color: var(--red); }
 
-  /* ---- hit dice / death / exhaustion / inspiration rows ---- */
-  .mini-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .mini {
-    background: var(--panel-2); border: 1px solid var(--line-soft);
-    border-radius: 8px; padding: 8px 9px; display: flex; flex-direction: column; gap: 6px;
-  }
-  .mini .mh { display: flex; align-items: center; gap: 6px; }
-  .mini .mh .t { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-dim); font-weight: 600; }
-  .pip-sq {
-    width: 18px; height: 18px; border-radius: 5px; padding: 0;
-    border: 2px solid var(--line); background: transparent;
-  }
-  .pip-sq.succ.filled { background: var(--green); border-color: var(--green); }
-  .pip-sq.fail.filled { background: var(--red); border-color: var(--red); }
-  .hd-line { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-  .hd-line .die { color: var(--ink-dim); font-variant-numeric: tabular-nums; }
-  .stepper { display: inline-flex; align-items: center; gap: 4px; }
-  .stepper button { width: 26px; height: 26px; padding: 0; font-weight: 700; }
-  .stepper .v { min-width: 1.5ch; text-align: center; font-variant-numeric: tabular-nums; font-weight: 650; }
-  .insp-toggle {
-    display: inline-flex; align-items: center; gap: 7px; cursor: pointer; user-select: none;
-  }
-  .insp-dot {
-    width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--amber-dim);
-  }
+  .death-strip { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap;
+                 background: #1c1416; border: 1px solid #4a2926; border-radius: 8px; padding: 0.3rem 0.45rem; }
+
+  /* drawer */
+  .drawer-btn { align-self: flex-start; font-size: 0.72rem; padding: 0.15rem 0.45rem; color: var(--ink-dim); }
+  .drawer { display: flex; flex-direction: column; gap: 0.45rem;
+            border-top: 1px dashed var(--line); padding-top: 0.45rem; }
+  .mini-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; }
+  .mini { background: var(--panel-2); border: 1px solid var(--line-soft); border-radius: 8px;
+          padding: 0.35rem 0.4rem; display: flex; flex-direction: column; gap: 0.25rem; }
+  .stepper { display: inline-flex; align-items: center; gap: 0.25rem; }
+  .stepper button { width: 1.5rem; height: 1.5rem; padding: 0; font-weight: 700; line-height: 1; }
+  .stepper .v { min-width: 1.5ch; text-align: center; font-weight: 650; font-variant-numeric: tabular-nums; }
+  .insp { display: inline-flex; align-items: center; gap: 0.4rem; cursor: pointer; user-select: none; }
+  .insp-dot { width: 0.9rem; height: 0.9rem; border-radius: 50%; border: 2px solid var(--amber-dim); }
   .insp-dot.on { background: var(--amber); border-color: var(--amber); box-shadow: 0 0 8px rgba(230,168,73,0.5); }
+  .rest-row { display: flex; gap: 0.3rem; }
+  .rest-row button { flex: 1; font-size: 0.72rem; }
+  .btn-short { border-color: #2c4a5e; } .btn-long { border-color: var(--amber-dim); }
 
-  .add-res { align-self: flex-start; font-size: 12px; padding: 4px 9px; color: var(--ink-dim); }
-  .notes-wrap { display: flex; flex-direction: column; gap: 3px; }
-  .notes-wrap .nl { font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-faint); }
+  /* ================= map ================= */
+  .map-wrap { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr clamp(150px, 13vw, 240px); gap: 0.6rem; padding: 0.6rem; }
+  .board-col { display: flex; flex-direction: column; gap: 0.5rem; min-height: 0; }
+  .board {
+    flex: 1; min-height: 0; display: grid; gap: 0.45rem;
+    background:
+      radial-gradient(ellipse at 30% 15%, rgba(79,179,176,0.07), transparent 60%),
+      var(--panel-3);
+    border: 1px solid var(--line-soft); border-radius: 8px; padding: 0.45rem;
+  }
+  .zone {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+    padding: 0.3rem; display: flex; flex-direction: column; gap: 0.25rem; min-height: 0; overflow: auto;
+    cursor: default;
+  }
+  .zone.armed { border-color: var(--tide); box-shadow: inset 0 0 0 1px var(--tide-dim); cursor: pointer; }
+  .zone.armed:hover { background: #17262e; }
+  .zone-head { display: flex; align-items: baseline; gap: 0.35rem; flex: none; }
+  .zone-name { font-size: 0.8rem; font-weight: 650; letter-spacing: 0.02em; color: var(--tide); }
+  .zone-terrain { font-size: 0.66rem; color: var(--ink-faint); flex: 1; min-width: 0;
+                  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .zone-tokens { display: flex; flex-wrap: wrap; gap: 0.3rem; align-content: start; }
 
-  .rest-row { display: flex; gap: 6px; }
-  .rest-row button { flex: 1; font-size: 12.5px; }
-  .btn-short { border-color: #2c4a5e; }
-  .btn-long { border-color: var(--amber-dim); }
+  .token {
+    display: flex; flex-direction: column; gap: 0.15rem; align-items: stretch;
+    background: var(--panel-2); border: 1px solid var(--line); border-radius: 7px;
+    padding: 0.22rem 0.35rem; min-width: 5.6rem; cursor: pointer; text-align: left;
+  }
+  .token .t-name { font-size: 0.78rem; font-weight: 650; white-space: nowrap; }
+  .token.pc { border-color: var(--amber-dim); background: #221c11; }
+  .token.pc .t-name { color: var(--amber); }
+  .token.enemy .t-name { color: var(--ink); }
+  .token.sel { outline: 2px solid var(--tide); outline-offset: 1px; }
+  .token.dead { opacity: 0.4; filter: saturate(0.3); }
+  .token.dead .t-name { text-decoration: line-through; }
+  .t-hp { display: flex; align-items: center; gap: 0.15rem; font-variant-numeric: tabular-nums; }
+  .t-hp input { width: 2.5rem; text-align: center; padding: 0.05rem 0.1rem; font-size: 0.82rem; font-weight: 650; }
+  .t-hp .m { font-size: 0.7rem; color: var(--ink-faint); }
+  .t-hp .hidden-hp { font-size: 0.75rem; color: var(--ink-faint); letter-spacing: 0.1em; }
+  .t-conds { display: flex; gap: 0.15rem; flex-wrap: wrap; }
+  .cond-chip { font-size: 0.58rem; letter-spacing: 0.04em; text-transform: uppercase;
+               background: #3a2416; border: 1px solid #6d4520; color: #f0b573;
+               border-radius: 4px; padding: 0 0.2rem; }
+  .cond-chip.more { background: transparent; border-color: var(--line); color: var(--ink-faint); }
+  .t-tools { display: flex; gap: 0.15rem; }
+  .t-tools button { font-size: 0.62rem; padding: 0 0.25rem; border-radius: 4px; line-height: 1.3; }
 
-  .add-char {
-    border: 1px dashed var(--line); background: transparent; color: var(--ink-dim);
-    border-radius: var(--radius); min-height: 90px; font-size: 15px;
+  .tray {
+    flex: none; border: 1px dashed var(--line); border-radius: 8px; padding: 0.35rem;
+    display: flex; gap: 0.35rem; align-items: center; flex-wrap: wrap; min-height: 2.6rem;
   }
-  .add-char:hover { color: var(--amber); border-color: var(--amber-dim); }
+  .tray.armed { border-color: var(--tide); cursor: pointer; }
+  .tray-label { font-size: 0.66rem; letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-faint); }
 
-  /* ---- initiative ---- */
-  .init-panel {
-    margin-top: 22px; background: var(--panel); border: 1px solid var(--line);
-    border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden;
-  }
-  .init-head {
-    display: flex; align-items: center; gap: 10px; padding: 10px 14px;
-    background: var(--panel-2); border-bottom: 1px solid var(--line-soft);
-  }
-  .init-head h2 { font-size: 14px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-dim); }
-  .init-body { padding: 8px 8px 12px; }
-  .init-list { display: flex; flex-direction: column; }
-  .combatant {
-    display: flex; align-items: center; gap: 8px; padding: 7px 8px;
-    border-radius: 8px; border: 1px solid transparent;
-  }
-  .combatant + .combatant { margin-top: 2px; }
-  .combatant.active { background: #1b2a18; border-color: #3c5a2f; }
-  .combatant.active .turn-dot { background: var(--green); box-shadow: 0 0 8px var(--green); }
-  .turn-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--line); flex: none; }
-  .combatant .init-v { width: 52px; }
-  .combatant .init-v input { width: 48px; text-align: center; font-weight: 650; font-variant-numeric: tabular-nums; }
-  .combatant .cname { flex: 1; min-width: 0; }
-  .combatant .cname input { width: 100%; }
-  .combatant.pc .cname input { color: var(--amber); }
-  .chp { display: flex; align-items: center; gap: 3px; }
-  .chp input { width: 46px; text-align: center; }
-  .chp .s { color: var(--ink-faint); }
-  .combatant .note input { width: 150px; }
-  .empty-init { color: var(--ink-faint); padding: 14px; text-align: center; font-style: italic; }
+  /* ladder */
+  .ladder { display: flex; flex-direction: column; gap: 0.25rem; min-height: 0; overflow: auto; }
+  .lad-row { display: flex; align-items: center; gap: 0.35rem; padding: 0.2rem 0.3rem;
+             border: 1px solid var(--line-soft); border-radius: 7px; background: var(--panel-3); }
+  .lad-row.pc { border-color: var(--amber-dim); }
+  .lad-row.unkeyed { opacity: 0.55; border-style: dashed; }
+  .lad-row input { width: 2.5rem; text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; padding: 0.1rem; }
+  .lad-row .ln { flex: 1; min-width: 0; font-size: 0.78rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lad-row.pc .ln { color: var(--amber); }
+  .round-pill { display: flex; align-items: center; gap: 0.35rem; background: var(--panel-3);
+                border: 1px solid var(--line); border-radius: 999px; padding: 0.15rem 0.3rem 0.15rem 0.6rem; }
+  .round-pill .n { font-variant-numeric: tabular-nums; font-weight: 700; min-width: 1.5ch; text-align: center; }
+  .round-pill button { padding: 0 0.4rem; }
 
-  /* ---- save/load bar ---- */
-  .savebar {
-    position: fixed; bottom: 0; left: 0; right: 0; z-index: 30;
-    background: rgba(13,20,25,0.94); backdrop-filter: blur(6px);
-    border-top: 1px solid var(--line); padding: 9px 18px;
-    display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
-  }
-  .savebar .grp { display: flex; gap: 6px; align-items: center; }
-  .savebar .sep-v { width: 1px; height: 22px; background: var(--line); }
-  .save-status { font-size: 12px; color: var(--ink-faint); }
-  .save-status.ok { color: var(--green); }
-  .save-status.warn { color: var(--amber); }
-  .btn-amber { border-color: var(--amber-dim); color: var(--amber); }
+  .empty { color: var(--ink-faint); font-style: italic; padding: 1.2rem; text-align: center; font-size: 0.85rem; }
 
-  /* ---- modal (paste / load) ---- */
-  .modal-bg {
-    position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,0.6);
-    display: none; align-items: center; justify-content: center; padding: 20px;
-  }
+  /* ================= modal ================= */
+  .modal-bg { position: fixed; inset: 0; z-index: 60; background: rgba(0,0,0,0.65);
+              display: none; align-items: center; justify-content: center; padding: 1rem; }
   .modal-bg.open { display: flex; }
-  .modal {
-    background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
-    box-shadow: var(--shadow); width: min(620px, 100%); padding: 18px;
-    display: flex; flex-direction: column; gap: 12px;
-  }
-  .modal h3 { font-size: 16px; }
-  .modal textarea { min-height: 180px; font-family: ui-monospace, monospace; font-size: 12px; }
-  .modal .actions { display: flex; gap: 8px; justify-content: flex-end; }
+  .modal { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+           box-shadow: var(--shadow); width: min(640px, 100%); max-height: 88vh; overflow: auto;
+           padding: 1rem; display: flex; flex-direction: column; gap: 0.6rem; }
+  .modal h3 { font-size: 1rem; }
+  .modal textarea { min-height: 12rem; font-family: ui-monospace, monospace; font-size: 0.78rem; }
+  .modal .actions { display: flex; gap: 0.4rem; justify-content: flex-end; }
+  .load-msg { font-size: 0.8rem; min-height: 1.2rem; }
+  .load-msg.err { color: var(--red); }
+  .load-msg.ok  { color: var(--green); }
+  .cond-pick { display: grid; grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr)); gap: 0.3rem; }
+  .cond-pick button { text-align: left; font-size: 0.8rem; }
+  .cond-pick button.on { border-color: #6d4520; background: #3a2416; color: #f0b573; }
+  .modal pre { background: #0e1820; border: 1px solid var(--line); border-radius: 8px;
+               padding: 0.6rem; overflow: auto; font-size: 0.72rem; margin: 0; }
 
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
-  @media (max-width: 560px) {
-    .chars { grid-template-columns: 1fr; }
-    .combatant .note { display: none; }
+  @media (max-width: 1000px) {
+    .stage { grid-template-columns: 1fr; overflow: auto; }
+    .map-wrap { grid-template-columns: 1fr; }
   }
 </style>
 </head>
 <body>
+
 <header>
-  <div class="row">
-    <span class="lamp" aria-hidden="true"></span>
-    <div class="brand"><h1><b>Westmere</b> Tracker</h1></div>
-    <div class="spacer"></div>
-    <div class="round-pill">
-      <span class="faint tiny" style="text-transform:uppercase;letter-spacing:.06em">Round</span>
-      <span class="n" id="roundN">1</span>
-      <button id="roundMinus" title="Previous round">–</button>
-      <button id="roundPlus" title="Next round">+</button>
-    </div>
+  <span class="lamp" aria-hidden="true"></span>
+  <h1><b>The Confluence</b> · Table Screen</h1>
+  <div class="spacer"></div>
+  <span class="eyebrow">Text size</span>
+  <div class="scale-set" id="scaleSet">
+    <button data-s="s">S</button><button data-s="m">M</button><button data-s="l">L</button><button data-s="xl">XL</button>
   </div>
+  <button class="btn-tide" id="openLoad">Load blob…</button>
+  <button id="openExport">Export…</button>
+  <button id="openHelp" title="Blob formats and how this page works">?</button>
+  <span class="save-status" id="saveStatus">—</span>
 </header>
 
-<main>
-  <div class="chars" id="chars"></div>
+<div class="stage">
 
-  <div class="init-panel">
-    <div class="init-head">
-      <h2>Initiative &amp; Combat</h2>
+  <!-- ============ TRACKER ============ -->
+  <section class="panel" id="trackerPanel">
+    <div class="panel-head">
+      <span class="dot amber"></span>
+      <h2>The Party</h2>
       <div class="spacer"></div>
-      <button id="addPCs" title="Add all characters to the order">Add PCs</button>
-      <button id="addFoe">+ Foe</button>
-      <button id="sortInit" title="Sort highest initiative first">Sort</button>
-      <button id="nextTurn" class="btn-amber">Next turn ▸</button>
-      <button id="clearInit">Clear</button>
+      <button class="btn-short" id="restShortAll">Short rest · party</button>
+      <button class="btn-long"  id="restLongAll">Long rest · party</button>
+      <button id="addChar" title="Add a character row">+</button>
     </div>
-    <div class="init-body">
-      <div class="init-list" id="initList"></div>
-    </div>
-  </div>
-</main>
+    <div class="panel-body"><div class="chars" id="chars"></div></div>
+  </section>
 
-<div class="savebar">
-  <div class="grp">
-    <button class="btn-long" id="restLongAll" title="Full HP, reset all resources, exhaustion −1, recover half hit dice">Long rest · all</button>
-    <button class="btn-short" id="restShortAll" title="Reset short-rest resources for everyone">Short rest · all</button>
-  </div>
-  <div class="sep-v"></div>
-  <div class="grp">
-    <button id="addCharBtn">+ Character</button>
-  </div>
-  <div class="spacer"></div>
-  <span class="save-status" id="saveStatus">—</span>
-  <div class="sep-v"></div>
-  <div class="grp">
-    <button class="btn-amber" id="copyState" title="Copy the full state as JSON to paste into your session log / project knowledge">Copy state</button>
-    <button id="loadState" title="Paste a saved JSON blob to restore">Load state…</button>
-    <button id="exportState" title="Download the state as a .json file">Export ⭳</button>
-    <button id="importState" title="Import a .json file">Import ⭱</button>
-    <button id="resetState" title="Wipe and reload the default seed">Reset</button>
-  </div>
-  <input type="file" id="fileInput" accept="application/json,.json" style="display:none">
+  <!-- ============ MAP ============ -->
+  <section class="panel" id="mapPanel">
+    <div class="panel-head">
+      <span class="dot tide"></span>
+      <h2 id="sceneTitle">No scene loaded</h2>
+      <div class="spacer"></div>
+      <div class="round-pill">
+        <span class="eyebrow">Round</span>
+        <span class="n" id="roundN">1</span>
+        <button id="roundMinus" title="Previous round">–</button>
+        <button id="roundPlus" title="Next round">+</button>
+      </div>
+      <button id="addEnemy">+ Enemy</button>
+      <button id="clearScene">Clear scene</button>
+    </div>
+    <div class="map-wrap">
+      <div class="board-col">
+        <div class="board" id="board"></div>
+        <div class="tray" id="tray">
+          <span class="tray-label">Off the board</span>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:0.35rem;min-height:0;">
+        <span class="eyebrow">Initiative</span>
+        <div class="ladder" id="ladder"></div>
+      </div>
+    </div>
+  </section>
+
 </div>
 
-<div class="modal-bg" id="modalBg">
+<!-- ============ modals ============ -->
+<div class="modal-bg" id="loadBg">
   <div class="modal">
-    <h3 id="modalTitle">Load state</h3>
-    <p class="muted tiny" id="modalHint">Paste a saved JSON blob below and choose Load. This replaces the current table state.</p>
-    <textarea id="modalText" placeholder="Paste JSON here…" spellcheck="false"></textarea>
+    <h3>Load a blob</h3>
+    <p class="muted tiny">Paste a tracker seed or a map scene blob. The page works out which it is.</p>
+    <textarea id="loadText" placeholder="Paste JSON here…" spellcheck="false"></textarea>
+    <div class="load-msg" id="loadMsg"></div>
     <div class="actions">
-      <button id="modalCancel">Cancel</button>
-      <button class="btn-amber" id="modalConfirm">Load</button>
+      <button id="loadCancel">Cancel</button>
+      <button class="btn-tide" id="loadGo">Load</button>
     </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="exportBg">
+  <div class="modal">
+    <h3>Export</h3>
+    <p class="muted tiny">The closeout file carries the party's state — HP, resources, hit dice, notes. Text it to Kent at the end of the night.</p>
+    <div class="row">
+      <button class="btn-amber" id="copyTracker">Copy party state</button>
+      <button id="dlTracker">Download closeout ⭳</button>
+      <button id="copyScene">Copy scene state</button>
+    </div>
+    <textarea id="exportText" readonly spellcheck="false"></textarea>
+    <div class="actions"><button id="exportClose">Close</button></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="condBg">
+  <div class="modal">
+    <h3 id="condTitle">Conditions</h3>
+    <div class="cond-pick" id="condPick"></div>
+    <div class="actions"><button id="condClose">Done</button></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="helpBg">
+  <div class="modal">
+    <h3>How this screen works</h3>
+    <p class="tiny muted">Two independent panels. The party tracker is seeded once a night; the map is loaded once per encounter. Both come in through <b>Load blob</b>.</p>
+    <p class="tiny muted"><b>Moving a token:</b> click the token, then click the zone. Click it again to deselect. <b>Enemy HP is transcribed, not calculated</b> — the DM says the resulting number, you type that number.</p>
+    <p class="eyebrow">Map scene blob</p>
+    <pre id="helpScene"></pre>
+    <p class="eyebrow">Reinforcements — adds without touching the board</p>
+    <pre id="helpAdd"></pre>
+    <div class="actions"><button id="helpClose">Close</button></div>
   </div>
 </div>
 
 <script>
 "use strict";
 (function () {
-  const LS_KEY = "westmere-tracker:v1";   // namespaced so it can't collide with other kentp111.github.io pages
-  const DIE_OPTIONS = ["d6", "d8", "d10", "d12"];
-  const hdEditOpen = new Set();   // char ids whose hit-dice setup editor is expanded (prep only)
 
-  // ---------- seed (placeholder data — every field is editable in the UI) ----------
-  // Doran & Bram seeded at their current level-3 (2014) values as a starting point.
-  // Overwrite freely once the 2024 rebuild / new roster is settled.
-  function seed() {
+  /* ==========================================================
+     Two components. Two storage keys. They share a page frame
+     and the Load box, and nothing else.
+     ========================================================== */
+  const K_TRK = "confluence:tracker:v1";
+  const K_MAP = "confluence:map:v1";
+  const K_UI  = "confluence:ui:v1";
+
+  const CONDITIONS = [
+    ["Prone","PRO"],["Restrained","RES"],["Grappled","GRA"],["Frightened","FRI"],
+    ["Poisoned","POI"],["Blinded","BLI"],["Charmed","CHM"],["Deafened","DEA"],
+    ["Incapacitated","INC"],["Invisible","INV"],["Paralyzed","PAR"],["Petrified","PET"],
+    ["Stunned","STU"],["Unconscious","UNC"],["Hexed","HEX"],["Blessed","BLS"]
+  ];
+  const DIE_OPTIONS = ["d6","d8","d10","d12"];
+
+  function uid(){ return Math.random().toString(36).slice(2,9); }
+  function num(v,d){ v = parseInt(v,10); return isNaN(v) ? d : v; }
+  function clamp(v,lo,hi){ return Math.max(lo, Math.min(hi, v)); }
+  function el(t,c,x){ const e=document.createElement(t); if(c)e.className=c; if(x!=null)e.textContent=x; return e; }
+
+  /* ==========================================================
+     TRACKER — seed from the four locked character sheets
+     ========================================================== */
+  function res(name, max, reset, shortReturn, hint) {
+    return { id: uid(), name, max, used: 0, reset, shortReturn: shortReturn||0, hint: hint||"" };
+  }
+  function pc(name, ac, altAc, altLabel, maxHp, die, hdMax, conMod, resources) {
     return {
-      version: 1,
-      savedAt: null,
-      round: 1,
-      activeId: null,
-      characters: [
-        {
-          id: uid(), name: "Bram Holt", ac: 18, maxHp: 31, curHp: 31, tempHp: 0,
-          hd: { die: "d10", max: 3, used: 0, conMod: 3 },
-          exhaustion: 0, inspiration: false,
-          death: { succ: 0, fail: 0 },
-          notes: "Mastery reminders, conditions, concentration…",
-          resources: [
-            { id: uid(), name: "Second Wind", max: 1, used: 0, reset: "short" },
-            { id: uid(), name: "Action Surge", max: 1, used: 0, reset: "short" }
-          ]
-        },
-        {
-          id: uid(), name: "Doran Vale", ac: 14, maxHp: 21, curHp: 21, tempHp: 0,
-          hd: { die: "d8", max: 3, used: 0, conMod: 1 },
-          exhaustion: 0, inspiration: false,
-          death: { succ: 0, fail: 0 },
-          notes: "Concentration, conditions…",
-          resources: [
-            { id: uid(), name: "Bardic Inspiration", max: 3, used: 0, reset: "long" },
-            { id: uid(), name: "Slots · 1st", max: 4, used: 0, reset: "long" },
-            { id: uid(), name: "Slots · 2nd", max: 2, used: 0, reset: "long" }
-          ]
-        }
-      ],
-      combat: []   // [{id,name,init,hp,maxHp,note,pc}]
+      id: uid(), name, ac, altAc: altAc||null, altLabel: altLabel||"", acAlt: false,
+      maxHp, curHp: maxHp, tempHp: 0,
+      hd: { die, max: hdMax, used: 0, conMod },
+      exhaustion: 0, inspiration: false, death: { succ:0, fail:0 },
+      notes: "Concentration: —",
+      resources
+    };
+  }
+  function trackerSeed() {
+    return { kind:"tracker", v:1, savedAt:null, characters: [
+      pc("Brogga Kalder", 15, null, "", 38, "d12", 3, 3, [
+        res("Rage", 3, "long", 1, "short rest returns one use"),
+        res("Stonecunning", 2, "long", 0, ""),
+        res("Healer's kit", 10, "none", 0, "restocked in the fiction, not by resting")
+      ]),
+      pc("Brann Kalder", 18, null, "", 27, "d8", 3, 2, [
+        res("Slots · 1st", 4, "long", 0, ""),
+        res("Slots · 2nd", 2, "long", 0, ""),
+        res("Channel Divinity", 2, "short", 0, ""),
+        res("War Priest", 3, "short", 0, ""),
+        res("Healing Word · free", 1, "long", 0, "Magic Initiate's daily free cast"),
+        res("Stonecunning", 2, "long", 0, "")
+      ]),
+      pc("Raffe Vask", 14, null, "", 24, "d8", 3, 2, [
+        res("Pact slots · 2nd", 2, "short", 0, "both cast at 2nd level"),
+        res("Magical Cunning", 1, "long", 0, "1-minute rite, one slot back"),
+        res("Ray of Sickness · free", 1, "long", 0, "Abyssal Legacy")
+      ]),
+      pc("Aelrith", 12, 15, "Mage Armor", 20, "d6", 3, 2, [
+        res("Slots · 1st", 4, "long", 0, ""),
+        res("Slots · 2nd", 2, "long", 0, ""),
+        res("Mage Armor · free", 1, "long", 0, ""),
+        res("Detect Magic · free", 1, "long", 0, "High Elf lineage"),
+        res("Arcane Recovery", 1, "long", 0, "spent on a short rest, returns on a long one")
+      ])
+    ]};
+  }
+
+  function migrateTracker(o) {
+    if (!o || typeof o !== "object") return null;
+    const chars = Array.isArray(o.characters) ? o.characters : null;
+    if (!chars) return null;
+    return {
+      kind: "tracker", v: 1, savedAt: o.savedAt || null,
+      characters: chars.map(c => ({
+        id: c.id || uid(), name: c.name || "Unnamed",
+        ac: num(c.ac, 10),
+        altAc: (c.altAc === null || c.altAc === undefined) ? null : num(c.altAc, null),
+        altLabel: c.altLabel || "", acAlt: !!c.acAlt,
+        maxHp: num(c.maxHp, 1), curHp: num(c.curHp, num(c.maxHp, 1)), tempHp: num(c.tempHp, 0),
+        hd: { die: (c.hd && c.hd.die) || "d8", max: num(c.hd && c.hd.max, 1),
+              used: num(c.hd && c.hd.used, 0), conMod: num(c.hd && c.hd.conMod, 0) },
+        exhaustion: num(c.exhaustion, 0), inspiration: !!c.inspiration,
+        death: { succ: num(c.death && c.death.succ, 0), fail: num(c.death && c.death.fail, 0) },
+        notes: c.notes || "",
+        resources: (c.resources || []).map(r => ({
+          id: r.id || uid(), name: r.name || "Resource",
+          max: num(r.max, 1), used: num(r.used, 0),
+          reset: ["short","long","none"].includes(r.reset) ? r.reset : "long",
+          shortReturn: num(r.shortReturn, 0), hint: r.hint || ""
+        }))
+      }))
     };
   }
 
-  function uid() { return Math.random().toString(36).slice(2, 9); }
+  /* ==========================================================
+     MAP
+     ========================================================== */
+  function mapSeed() {
+    return { kind:"scene", v:1, title:"", grid:[3,2], round:1, zones:[], tokens:[], ladder:[] };
+  }
 
-  // ---------- state + persistence ----------
-  let state = load() || seed();
+  function expandScene(raw, existing) {
+    // Build a live scene from an authored blob. If `existing` is passed we are
+    // merging reinforcements: nothing already on the board is touched.
+    const merging = !!existing;
+    const s = merging ? existing : mapSeed();
+    if (!merging) { s.tokens = []; s.zones = []; s.ladder = []; s.round = 1; }
+
+    if (raw.title) s.title = String(raw.title);
+    if (Array.isArray(raw.grid) && raw.grid.length === 2) s.grid = [num(raw.grid[0],3), num(raw.grid[1],2)];
+
+    (raw.zones || []).forEach(z => {
+      const id = z.id || (z.name || "zone").toLowerCase().replace(/[^a-z0-9]+/g,"-");
+      if (s.zones.some(x => x.id === id)) return;
+      const at = Array.isArray(z.at) ? z.at : [0,0];
+      const span = Array.isArray(z.span) ? z.span : [1,1];
+      s.zones.push({ id, name: z.name || id, at:[num(at[0],0),num(at[1],0)],
+                     span:[Math.max(1,num(span[0],1)), Math.max(1,num(span[1],1))],
+                     terrain: z.terrain || "" });
+    });
+
+    const newLadder = [];
+    (raw.enemies || []).forEach(e => {
+      const base = e.name || "Foe";
+      const count = Math.max(1, num(e.count, 1));
+      const hp = num(e.hp, num(e.maxHp, 1));
+      const zone = e.zone || null;
+      // continue numbering if this group already has tokens on the board
+      let start = 0;
+      s.tokens.forEach(t => { if (t.kind==="enemy" && t.group===base) start = Math.max(start, t.idx||0); });
+      for (let i = 1; i <= count; i++) {
+        const idx = start + i;
+        s.tokens.push({
+          id: uid(), kind: "enemy", group: base, idx,
+          label: (count > 1 || start > 0) ? (base + " " + idx) : base,
+          hp, maxHp: hp, hideHp: !!e.hideHp,
+          zone, conds: [], dead: false
+        });
+      }
+      newLadder.push({ id: uid(), name: count > 1 ? (base + " ×" + count) : base, pc: false, init: null });
+    });
+
+    (raw.pcs || []).forEach(p => {
+      const nm = typeof p === "string" ? p : (p.name || "PC");
+      if (s.tokens.some(t => t.kind === "pc" && t.label === nm)) return;
+      const z = (typeof p === "object" && p.zone) ? p.zone : (raw.pcZone || null);
+      s.tokens.push({ id: uid(), kind:"pc", group:"pc", idx:0, label: nm,
+                      hp:0, maxHp:0, hideHp:true, zone: z, conds: [], dead:false });
+      newLadder.push({ id: uid(), name: nm, pc: true, init: null });
+    });
+
+    if (Array.isArray(raw.ladder) && raw.ladder.length) {
+      raw.ladder.forEach(n => {
+        const nm = typeof n === "string" ? n : (n.name || "");
+        if (!nm) return;
+        if (s.ladder.some(x => x.name === nm) || newLadder.some(x => x.name === nm)) return;
+        newLadder.push({ id: uid(), name: nm, pc: !!(n && n.pc), init: null });
+      });
+    }
+    newLadder.forEach(l => { if (!s.ladder.some(x => x.name === l.name)) s.ladder.push(l); });
+    return s;
+  }
+
+  function migrateMap(o) {
+    if (!o || typeof o !== "object") return null;
+    if (!Array.isArray(o.tokens)) return null;
+    o.kind = "scene"; o.v = 1;
+    o.title = o.title || ""; o.round = num(o.round, 1);
+    o.grid = Array.isArray(o.grid) && o.grid.length===2 ? [num(o.grid[0],3),num(o.grid[1],2)] : [3,2];
+    o.zones = (o.zones||[]).map(z => ({
+      id: z.id || uid(), name: z.name || "Zone",
+      at: Array.isArray(z.at)?[num(z.at[0],0),num(z.at[1],0)]:[0,0],
+      span: Array.isArray(z.span)?[Math.max(1,num(z.span[0],1)),Math.max(1,num(z.span[1],1))]:[1,1],
+      terrain: z.terrain || ""
+    }));
+    o.tokens = o.tokens.map(t => ({
+      id: t.id || uid(), kind: t.kind === "pc" ? "pc" : "enemy",
+      group: t.group || t.label || "Foe", idx: num(t.idx,0), label: t.label || "Foe",
+      hp: num(t.hp,0), maxHp: num(t.maxHp,0), hideHp: !!t.hideHp,
+      zone: t.zone || null, conds: Array.isArray(t.conds)?t.conds:[], dead: !!t.dead
+    }));
+    o.ladder = (o.ladder||[]).map(l => ({
+      id: l.id || uid(), name: l.name || "?", pc: !!l.pc,
+      init: (l.init === null || l.init === undefined || l.init === "") ? null : num(l.init, null)
+    }));
+    return o;
+  }
+
+  /* ==========================================================
+     state + persistence
+     ========================================================== */
+  let TRK = loadJSON(K_TRK, migrateTracker) || trackerSeed();
+  let MAP = loadJSON(K_MAP, migrateMap) || mapSeed();
+  let UI  = loadJSON(K_UI, o => o) || { scale: "m" };
+  let selectedToken = null;
+  let openDrawers = new Set();
   let saveTimer = null;
 
-  function load() {
-    try {
-      const raw = localStorage.getItem(LS_KEY);
-      if (!raw) return null;
-      const obj = JSON.parse(raw);
-      return migrate(obj);
-    } catch (e) { return null; }
+  function loadJSON(key, fn) {
+    try { const raw = localStorage.getItem(key); if (!raw) return null; return fn(JSON.parse(raw)); }
+    catch (e) { return null; }
   }
-  function migrate(obj) {
-    // tolerant rehydrate: fill any missing fields so older/partial blobs still load
-    if (!obj || typeof obj !== "object") return null;
-    obj.version = 1;
-    obj.round = obj.round || 1;
-    obj.activeId = obj.activeId || null;
-    obj.characters = (obj.characters || []).map(c => ({
-      id: c.id || uid(), name: c.name || "Unnamed",
-      ac: num(c.ac, 10), maxHp: num(c.maxHp, 1), curHp: num(c.curHp, num(c.maxHp, 1)), tempHp: num(c.tempHp, 0),
-      hd: { die: (c.hd && c.hd.die) || "d8", max: num(c.hd && c.hd.max, 1), used: num(c.hd && c.hd.used, 0), conMod: num(c.hd && c.hd.conMod, 0) },
-      exhaustion: num(c.exhaustion, 0), inspiration: !!c.inspiration,
-      death: { succ: num(c.death && c.death.succ, 0), fail: num(c.death && c.death.fail, 0) },
-      notes: c.notes || "",
-      resources: (c.resources || []).map(r => ({ id: r.id || uid(), name: r.name || "Resource", max: num(r.max, 1), used: num(r.used, 0), reset: r.reset || "long" }))
-    }));
-    obj.combat = (obj.combat || []).map(x => ({ id: x.id || uid(), name: x.name || "Foe", init: num(x.init, 0), hp: num(x.hp, 0), maxHp: num(x.maxHp, 0), note: x.note || "", pc: !!x.pc }));
-    return obj;
+  function saveAll() {
+    let ok = true;
+    TRK.savedAt = new Date().toISOString();
+    try { localStorage.setItem(K_TRK, JSON.stringify(TRK)); } catch(e){ ok = false; }
+    try { localStorage.setItem(K_MAP, JSON.stringify(MAP)); } catch(e){ ok = false; }
+    try { localStorage.setItem(K_UI,  JSON.stringify(UI));  } catch(e){ ok = false; }
+    setStatus(ok);
   }
-  function num(v, d) { v = parseInt(v, 10); return isNaN(v) ? d : v; }
-
-  function save() {
-    state.savedAt = new Date().toISOString();
-    let ok = false;
-    try { localStorage.setItem(LS_KEY, JSON.stringify(state)); ok = true; } catch (e) { ok = false; }
-    setStatus(ok ? "saved" : "nostore");
-  }
-  function queueSave() {
-    clearTimeout(saveTimer);
-    saveTimer = setTimeout(save, 250);
-  }
-  function setStatus(kind) {
-    const el = document.getElementById("saveStatus");
-    if (kind === "saved") {
-      const t = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-      el.textContent = "Saved on this device · " + t;
-      el.className = "save-status ok";
-    } else if (kind === "nostore") {
-      el.textContent = "Auto-save off (browser blocked storage) — use Copy / Export to keep state";
-      el.className = "save-status warn";
+  function queueSave(){ clearTimeout(saveTimer); saveTimer = setTimeout(saveAll, 250); }
+  function setStatus(ok) {
+    const e = document.getElementById("saveStatus");
+    if (ok) {
+      e.textContent = "Saved · " + new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});
+      e.className = "save-status";
+    } else {
+      e.textContent = "Auto-save off — use Export to keep state";
+      e.className = "save-status warn";
     }
   }
 
-  // ---------- helpers ----------
-  function findChar(id) { return state.characters.find(c => c.id === id); }
-  function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
-  function el(tag, cls, txt) { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
-
-  // ---------- rest logic ----------
+  /* ==========================================================
+     rest logic  (the general mechanism decision 1–4 asked for)
+     ========================================================== */
   function shortRest(c) {
-    c.resources.forEach(r => { if (r.reset === "short") r.used = 0; });
+    c.resources.forEach(r => {
+      if (r.reset === "short") r.used = 0;
+      else if (r.shortReturn > 0) r.used = Math.max(0, r.used - r.shortReturn);
+    });
   }
   function longRest(c) {
     c.curHp = c.maxHp; c.tempHp = 0;
     c.resources.forEach(r => { if (r.reset === "short" || r.reset === "long") r.used = 0; });
-    c.death = { succ: 0, fail: 0 };
-    c.exhaustion = Math.max(0, c.exhaustion - 1);           // 2024: long rest removes 1 level
-    const recover = Math.max(1, Math.floor(c.hd.max / 2));  // standard: half (round down), min 1
-    c.hd.used = Math.max(0, c.hd.used - recover);
+    c.death = { succ:0, fail:0 };
+    c.exhaustion = Math.max(0, c.exhaustion - 1);
+    c.hd.used = Math.max(0, c.hd.used - Math.max(1, Math.floor(c.hd.max / 2)));
   }
 
-  // ================= RENDER =================
-  function render() {
-    renderChars();
-    renderCombat();
-    document.getElementById("roundN").textContent = state.round;
-  }
-
-  function renderChars() {
+  /* ==========================================================
+     RENDER — tracker
+     ========================================================== */
+  function renderTracker() {
     const wrap = document.getElementById("chars");
     wrap.innerHTML = "";
-    state.characters.forEach(c => wrap.appendChild(charCard(c)));
+    TRK.characters.forEach(c => wrap.appendChild(charCard(c)));
   }
 
   function charCard(c) {
-    const card = el("div", "card");
     const ratio = c.maxHp > 0 ? c.curHp / c.maxHp : 0;
-    if (c.curHp <= 0) card.classList.add("down");
-    else if (ratio <= 0.5) card.classList.add("bloodied");
+    const card = el("div", "card" + (c.curHp <= 0 ? " down" : (ratio <= 0.5 ? " bloodied" : "")));
 
-    // --- head: name + AC + remove ---
     const head = el("div", "card-head");
-    const nameI = el("input", "name-input"); nameI.value = c.name;
-    nameI.addEventListener("input", () => { c.name = nameI.value; queueSave(); });
-    const ac = el("div", "ac");
-    const acI = el("input"); acI.type = "number"; acI.value = c.ac;
-    acI.addEventListener("input", () => { c.ac = num(acI.value, c.ac); queueSave(); });
-    ac.appendChild(acI); ac.appendChild(el("span", "lbl", "AC"));
-    const xb = el("button", "x-btn", "✕"); xb.title = "Remove character";
-    xb.addEventListener("click", () => {
-      if (confirm("Remove " + c.name + " from the tracker?")) {
-        state.characters = state.characters.filter(x => x.id !== c.id);
-        save(); render();
-      }
+    const nm = el("input", "nm"); nm.value = c.name;
+    nm.style.background = "transparent"; nm.style.border = "1px solid transparent";
+    nm.addEventListener("input", () => { c.name = nm.value; queueSave(); });
+    const acBox = el("div", "ac-box");
+    const acI = el("input"); acI.type = "number";
+    acI.value = (c.acAlt && c.altAc != null) ? c.altAc : c.ac;
+    acI.title = "Armor Class";
+    acI.addEventListener("input", () => {
+      const v = num(acI.value, null); if (v === null) return;
+      if (c.acAlt && c.altAc != null) c.altAc = v; else c.ac = v; queueSave();
     });
-    head.append(nameI, ac, xb);
+    acBox.append(el("span","eyebrow","AC"), acI);
+    if (c.altAc != null) {
+      const t = el("button", "ac-alt" + (c.acAlt ? " on" : ""), c.altLabel || "alt");
+      t.title = "Switch between " + c.ac + " and " + c.altAc;
+      t.addEventListener("click", () => { c.acAlt = !c.acAlt; saveAll(); renderTracker(); });
+      acBox.appendChild(t);
+    }
+    head.append(nm, acBox);
 
-    // --- body ---
     const body = el("div", "card-body");
 
-    // HP block
-    const hpBlock = el("div", "hp-block");
+    // HP
+    const hp = el("div", "hp-block");
     const big = el("div", "hp-big");
-    const cur = el("span", "cur");
-    cur.textContent = c.curHp;
-    cur.classList.add(c.curHp <= 0 ? "down" : (ratio <= 0.5 ? "bloodied" : "ok"));
-    big.append(cur, el("span", "sep", "/"), el("span", "max", String(c.maxHp)));
-    if (c.tempHp > 0) {
-      const t = el("span", "temp");
-      t.append(el("span", "lbl", "TEMP"), document.createTextNode(" +" + c.tempHp));
-      big.appendChild(t);
-    }
-    const hpEdit = el("div", "hp-edit");
-    const amt = el("input"); amt.type = "number"; amt.value = ""; amt.placeholder = "0"; amt.title = "Amount";
-    const dmg = el("button", "btn-dmg", "Damage");
-    const heal = el("button", "btn-heal", "Heal");
-    function applyHp(sign) {
+    const cur = el("span", "cur " + (c.curHp <= 0 ? "down" : (ratio <= 0.5 ? "bloodied" : "ok")), String(c.curHp));
+    big.append(cur, el("span","sep","/"), el("span","max",String(c.maxHp)));
+    const ctl = el("div", "hp-ctl");
+    const amt = el("input"); amt.type = "number"; amt.placeholder = "0"; amt.title = "Amount";
+    const bd = el("button","btn-dmg","Damage"), bh = el("button","btn-heal","Heal");
+    function apply(sign){
       let n = num(amt.value, 0); if (n <= 0) return;
       if (sign < 0) {
-        // damage soaks temp HP first
-        if (c.tempHp > 0) { const used = Math.min(c.tempHp, n); c.tempHp -= used; n -= used; }
+        if (c.tempHp > 0) { const u = Math.min(c.tempHp, n); c.tempHp -= u; n -= u; }
         c.curHp = Math.max(0, c.curHp - n);
-      } else {
-        c.curHp = Math.min(c.maxHp, c.curHp + n);
-      }
-      amt.value = ""; save(); render();
+      } else c.curHp = Math.min(c.maxHp, c.curHp + n);
+      amt.value = ""; saveAll(); renderTracker();
     }
-    dmg.addEventListener("click", () => applyHp(-1));
-    heal.addEventListener("click", () => applyHp(1));
-    amt.addEventListener("keydown", e => { if (e.key === "Enter") applyHp(1); });
-    const row2 = el("div", "row2"); row2.append(amt, dmg, heal);
+    bd.addEventListener("click", () => apply(-1));
+    bh.addEventListener("click", () => apply(1));
+    amt.addEventListener("keydown", e => { if (e.key === "Enter") apply(1); });
+    ctl.append(amt, bd, bh);
+    const temp = el("span", "temp-chip");
+    const tI = el("input"); tI.type = "number"; tI.value = c.tempHp;
+    tI.title = "Temporary HP — absorbs damage first";
+    tI.addEventListener("input", () => { c.tempHp = Math.max(0, num(tI.value, 0)); });
+    tI.addEventListener("change", () => { saveAll(); renderTracker(); });
+    temp.append(el("span","l","TEMP"), tI);
+    hp.append(big, ctl, temp);
+    body.appendChild(hp);
 
-    const tempRow = el("div", "row2");
-    const tempLbl = el("span", "maxhp-edit");
-    const tI = el("input"); tI.type = "number"; tI.value = c.tempHp; tI.title = "Temporary HP — a buffer that absorbs damage before real HP";
-    tI.addEventListener("input", () => { c.tempHp = Math.max(0, num(tI.value, 0)); });   // store while typing (keeps focus + multi-digit)
-    tI.addEventListener("change", () => { save(); render(); });                          // redraw badge / colors on blur or Enter
-    tempLbl.append(el("span", "lbl", "Temp"), tI);
-    const maxEdit = el("span", "maxhp-edit");
-    const mI = el("input"); mI.type = "number"; mI.value = c.maxHp; mI.title = "Maximum HP";
-    mI.addEventListener("input", () => { c.maxHp = Math.max(1, num(mI.value, c.maxHp)); c.curHp = Math.min(c.curHp, c.maxHp); });
-    mI.addEventListener("change", () => { save(); render(); });
-    maxEdit.append(el("span", "lbl", "Max"), mI);
-    tempRow.append(tempLbl, maxEdit);
-
-    hpEdit.append(row2, tempRow);
-    hpBlock.append(big, hpEdit);
-    body.appendChild(hpBlock);
+    // death saves surface themselves when they matter
+    if (c.curHp <= 0) body.appendChild(deathStrip(c));
 
     // resources
-    c.resources.forEach(r => body.appendChild(resourceRow(c, r)));
-    const addRes = el("button", "add-res", "+ resource");
-    addRes.addEventListener("click", () => {
-      c.resources.push({ id: uid(), name: "New resource", max: 1, used: 0, reset: "long" });
-      save(); render();
-    });
-    body.appendChild(addRes);
+    c.resources.forEach(r => body.appendChild(resRow(c, r)));
 
-    // mini-grid: hit dice + exhaustion ; death saves + inspiration
-    const grid = el("div", "mini-grid");
-    grid.append(hitDiceMini(c), exhaustionMini(c), deathMini(c), inspirationMini(c));
-    body.appendChild(grid);
+    // drawer
+    const open = openDrawers.has(c.id);
+    const db = el("button", "drawer-btn", open ? "▾ less" : "▸ dice · exhaustion · notes");
+    db.addEventListener("click", () => { open ? openDrawers.delete(c.id) : openDrawers.add(c.id); renderTracker(); });
+    body.appendChild(db);
 
-    // notes
-    const nw = el("div", "notes-wrap");
-    nw.appendChild(el("span", "nl", "Notes"));
-    const ta = el("textarea"); ta.value = c.notes;
-    ta.addEventListener("input", () => { c.notes = ta.value; queueSave(); });
-    nw.appendChild(ta);
-    body.appendChild(nw);
+    if (open) {
+      const d = el("div", "drawer");
+      const g = el("div", "mini-grid");
+      g.append(hitDiceMini(c), exhaustionMini(c), deathMini(c), inspMini(c));
+      d.appendChild(g);
+      const addRes = el("button", "drawer-btn", "+ resource");
+      addRes.addEventListener("click", () => {
+        c.resources.push(res("New resource", 1, "long", 0, "")); saveAll(); renderTracker();
+      });
+      d.appendChild(addRes);
+      const nw = el("div"); nw.appendChild(el("div","eyebrow","Notes · concentration"));
+      const ta = el("textarea"); ta.value = c.notes;
+      ta.addEventListener("input", () => { c.notes = ta.value; queueSave(); });
+      nw.appendChild(ta);
+      d.appendChild(nw);
+      const rm = el("button","drawer-btn","remove this character");
+      rm.addEventListener("click", () => {
+        if (confirm("Remove " + c.name + " from the tracker?")) {
+          TRK.characters = TRK.characters.filter(x => x.id !== c.id); saveAll(); renderTracker();
+        }
+      });
+      d.appendChild(rm);
+      body.appendChild(d);
+    }
 
-    // per-character rest
-    const rest = el("div", "rest-row");
-    const sr = el("button", "btn-short", "Short rest");
-    sr.addEventListener("click", () => { shortRest(c); save(); render(); });
-    const lr = el("button", "btn-long", "Long rest");
-    lr.addEventListener("click", () => { longRest(c); save(); render(); });
-    rest.append(sr, lr);
-    body.appendChild(rest);
+    const rr = el("div","rest-row");
+    const sr = el("button","btn-short","Short rest"), lr = el("button","btn-long","Long rest");
+    sr.addEventListener("click", () => { shortRest(c); saveAll(); renderTracker(); });
+    lr.addEventListener("click", () => { longRest(c); saveAll(); renderTracker(); });
+    rr.append(sr, lr); body.appendChild(rr);
 
     card.append(head, body);
     return card;
   }
 
-  function resourceRow(c, r) {
+  function resRow(c, r) {
     const box = el("div", "res");
-    const rh = el("div", "res-head");
-    const nm = el("input", "res-name"); nm.value = r.name;
-    nm.addEventListener("input", () => { r.name = nm.value; queueSave(); });
-    const tag = el("span", "reset-tag " + r.reset, r.reset === "none" ? "no reset" : r.reset);
-    tag.title = "Click to cycle reset: short → long → no reset";
+    const nm = el("div", "res-name", r.name);
+    nm.title = r.hint || r.name;
+    const tag = el("span", "tag " + r.reset, r.reset === "none" ? "no reset" : r.reset);
+    tag.title = "Click to cycle: short → long → no reset" + (r.shortReturn ? "\n(short rest returns " + r.shortReturn + ")" : "");
     tag.addEventListener("click", () => {
       r.reset = r.reset === "short" ? "long" : r.reset === "long" ? "none" : "short";
-      save(); render();
+      saveAll(); renderTracker();
     });
-    const rx = el("button", "res-x", "✕"); rx.title = "Remove resource";
-    rx.addEventListener("click", () => { c.resources = c.resources.filter(x => x.id !== r.id); save(); render(); });
-    rh.append(nm, tag, rx);
-
     const pips = el("div", "pips");
-    const dec = el("button", "pip-min", "–"); dec.title = "Fewer pips";
-    dec.addEventListener("click", () => { r.max = Math.max(0, r.max - 1); r.used = Math.min(r.used, r.max); save(); render(); });
+    const dec = el("button","tag","–"); dec.title = "Fewer";
+    dec.addEventListener("click", () => { r.max = Math.max(0, r.max-1); r.used = Math.min(r.used, r.max); saveAll(); renderTracker(); });
     pips.appendChild(dec);
     for (let i = 0; i < r.max; i++) {
-      const p = el("button", "pip" + (i < r.max - r.used ? " filled" : ""));
-      p.title = (i < r.max - r.used) ? "Available — click to spend" : "Spent — click to restore";
+      const avail = r.max - r.used;
+      const p = el("button", "pip" + (i < avail ? " filled" : ""));
+      p.title = i < avail ? "Available — click to spend" : "Spent — click to restore";
       p.addEventListener("click", () => {
-        const available = r.max - r.used;
-        if (i < available) r.used++; else r.used--;
-        r.used = clamp(r.used, 0, r.max);
-        save(); render();
+        const a = r.max - r.used;
+        if (i < a) r.used++; else r.used--;
+        r.used = clamp(r.used, 0, r.max); saveAll(); renderTracker();
       });
       pips.appendChild(p);
     }
-    const inc = el("button", "pip-min", "+"); inc.title = "More pips";
-    inc.addEventListener("click", () => { r.max += 1; save(); render(); });
+    const inc = el("button","tag","+"); inc.title = "More";
+    inc.addEventListener("click", () => { r.max += 1; saveAll(); renderTracker(); });
     pips.appendChild(inc);
-
-    box.append(rh, pips);
+    if (r.shortReturn > 0) {
+      const s = el("span","tag short","+" + r.shortReturn + " short");
+      s.title = "A short rest returns " + r.shortReturn + " expended use";
+      s.style.cursor = "default";
+      pips.appendChild(s);
+    }
+    box.append(nm, tag, pips);
     return box;
   }
 
-  function hitDiceMini(c) {
-    const open = hdEditOpen.has(c.id);
-    const m = el("div", "mini");
-    const mh = el("div", "mh");
-    mh.appendChild(el("span", "t", "Hit Dice"));
-    mh.appendChild(el("span", "spacer"));
-    const editToggle = el("button"); editToggle.style.fontSize = "11px"; editToggle.style.padding = "2px 6px";
-    editToggle.textContent = open ? "done" : "edit";
-    editToggle.title = "Set the number of hit dice, die size, and CON mod (prep)";
-    editToggle.addEventListener("click", () => { if (open) hdEditOpen.delete(c.id); else hdEditOpen.add(c.id); render(); });
-    mh.appendChild(editToggle);
-    m.appendChild(mh);
+  function deathStrip(c) {
+    const s = el("div", "death-strip");
+    s.appendChild(el("span","eyebrow","Death saves"));
+    [["succ","save"],["fail","fail"]].forEach(([k,lbl]) => {
+      const g = el("div","row");
+      g.appendChild(el("span","tiny faint",lbl));
+      for (let i=0;i<3;i++){
+        const filled = c.death[k] > i;
+        const p = el("button","pip sq " + k + (filled?" filled":""));
+        p.addEventListener("click", () => {
+          const v = c.death[k]; c.death[k] = (i+1 === v) ? i : i+1; saveAll(); renderTracker();
+        });
+        g.appendChild(p);
+      }
+      s.appendChild(g);
+    });
+    const clr = el("button","tag","clear");
+    clr.addEventListener("click", () => { c.death = {succ:0,fail:0}; saveAll(); renderTracker(); });
+    s.appendChild(clr);
+    return s;
+  }
 
-    // pips: spend / restore only — no HP change, you roll your own die
-    const line = el("div", "hd-line");
-    for (let i = 0; i < c.hd.max; i++) {
-      const p = el("button", "pip" + (i < c.hd.max - c.hd.used ? " filled" : ""));
-      p.style.width = "18px"; p.style.height = "18px";
-      p.title = (i < c.hd.max - c.hd.used) ? "Spend a hit die" : "Restore a spent hit die";
+  function hitDiceMini(c) {
+    const m = el("div","mini");
+    m.appendChild(el("div","eyebrow","Hit dice"));
+    const line = el("div","row");
+    for (let i=0;i<c.hd.max;i++){
+      const avail = c.hd.max - c.hd.used;
+      const p = el("button","pip" + (i<avail?" filled":""));
+      p.title = i<avail ? "Spend a hit die" : "Restore a spent hit die";
       p.addEventListener("click", () => {
-        const avail = c.hd.max - c.hd.used;
-        if (i < avail) c.hd.used++; else c.hd.used--;
-        c.hd.used = clamp(c.hd.used, 0, c.hd.max);
-        save(); render();
+        const a = c.hd.max - c.hd.used;
+        if (i<a) c.hd.used++; else c.hd.used--;
+        c.hd.used = clamp(c.hd.used,0,c.hd.max); saveAll(); renderTracker();
       });
       line.appendChild(p);
     }
-    if (c.hd.max === 0) line.appendChild(el("span", "tiny faint", "—"));
-    const modStr = (c.hd.conMod >= 0 ? "+" : "") + c.hd.conMod;
-    line.appendChild(el("span", "die", "roll " + c.hd.die + " " + modStr));
+    if (c.hd.max === 0) line.appendChild(el("span","tiny faint","—"));
+    line.appendChild(el("span","tiny faint","roll " + c.hd.die + " " + (c.hd.conMod>=0?"+":"") + c.hd.conMod));
     m.appendChild(line);
-
-    // setup editor — collapsed during play
-    if (open) {
-      const edit = el("div", "row");
-      const maxI = el("input"); maxI.type = "number"; maxI.value = c.hd.max; maxI.style.width = "44px"; maxI.title = "Number of hit dice";
-      maxI.addEventListener("input", () => { c.hd.max = Math.max(0, num(maxI.value, c.hd.max)); c.hd.used = Math.min(c.hd.used, c.hd.max); queueSave(); });
-      const dieS = el("select");
-      DIE_OPTIONS.forEach(d => { const o = el("option", null, d); o.value = d; if (d === c.hd.die) o.selected = true; dieS.appendChild(o); });
-      dieS.addEventListener("change", () => { c.hd.die = dieS.value; save(); render(); });
-      const conI = el("input"); conI.type = "number"; conI.value = c.hd.conMod; conI.style.width = "44px"; conI.title = "CON mod — the bonus added when you roll";
-      conI.addEventListener("input", () => { c.hd.conMod = num(conI.value, c.hd.conMod); queueSave(); });
-      edit.append(el("span", "tiny faint", "count"), maxI, dieS, el("span", "tiny faint", "CON"), conI);
-      m.appendChild(edit);
-    }
+    const edit = el("div","row");
+    const mx = el("input"); mx.type="number"; mx.value=c.hd.max; mx.style.width="2.6rem";
+    mx.addEventListener("input", ()=>{ c.hd.max=Math.max(0,num(mx.value,c.hd.max)); c.hd.used=Math.min(c.hd.used,c.hd.max); queueSave(); });
+    const ds = el("select");
+    DIE_OPTIONS.forEach(d=>{ const o=el("option",null,d); o.value=d; if(d===c.hd.die)o.selected=true; ds.appendChild(o); });
+    ds.addEventListener("change", ()=>{ c.hd.die=ds.value; saveAll(); renderTracker(); });
+    const cm = el("input"); cm.type="number"; cm.value=c.hd.conMod; cm.style.width="2.6rem";
+    cm.addEventListener("input", ()=>{ c.hd.conMod=num(cm.value,c.hd.conMod); queueSave(); });
+    edit.append(el("span","tiny faint","count"), mx, ds, el("span","tiny faint","CON"), cm);
+    m.appendChild(edit);
     return m;
   }
-
   function exhaustionMini(c) {
-    const m = el("div", "mini");
-    const mh = el("div", "mh"); mh.appendChild(el("span", "t", "Exhaustion"));
-    m.appendChild(mh);
-    const step = el("div", "stepper");
-    const minus = el("button", null, "–");
-    minus.addEventListener("click", () => { c.exhaustion = clamp(c.exhaustion - 1, 0, 6); save(); render(); });
-    const v = el("span", "v", String(c.exhaustion));
-    if (c.exhaustion >= 1) v.style.color = c.exhaustion >= 6 ? "var(--red)" : "var(--amber)";
-    const plus = el("button", null, "+");
-    plus.addEventListener("click", () => { c.exhaustion = clamp(c.exhaustion + 1, 0, 6); save(); render(); });
-    step.append(minus, v, plus);
-    m.appendChild(step);
-    const hint = el("span", "tiny faint");
-    hint.textContent = c.exhaustion === 0 ? "none" : ("−" + (c.exhaustion * 2) + " to d20 rolls");
-    m.appendChild(hint);
+    const m = el("div","mini");
+    m.appendChild(el("div","eyebrow","Exhaustion"));
+    const s = el("div","stepper");
+    const mn = el("button",null,"–"); mn.addEventListener("click",()=>{c.exhaustion=clamp(c.exhaustion-1,0,6);saveAll();renderTracker();});
+    const v = el("span","v",String(c.exhaustion));
+    if (c.exhaustion>=1) v.style.color = c.exhaustion>=6 ? "var(--red)" : "var(--amber)";
+    const pl = el("button",null,"+"); pl.addEventListener("click",()=>{c.exhaustion=clamp(c.exhaustion+1,0,6);saveAll();renderTracker();});
+    s.append(mn,v,pl); m.appendChild(s);
+    m.appendChild(el("span","tiny faint", c.exhaustion===0 ? "none" : ("−"+(c.exhaustion*2)+" to d20 rolls")));
     return m;
   }
-
   function deathMini(c) {
-    const m = el("div", "mini");
-    const mh = el("div", "mh"); mh.appendChild(el("span", "t", "Death Saves"));
-    const clr = el("button"); clr.style.fontSize = "11px"; clr.style.padding = "2px 6px"; clr.textContent = "clear";
-    clr.addEventListener("click", () => { c.death = { succ: 0, fail: 0 }; save(); render(); });
-    mh.append(el("span", "spacer"), clr);
-    m.appendChild(mh);
-    const mkRow = (kind) => {
-      const r = el("div", "row");
-      r.appendChild(el("span", "tiny faint", kind === "succ" ? "save" : "fail"));
-      for (let i = 0; i < 3; i++) {
-        const filled = (kind === "succ" ? c.death.succ : c.death.fail) > i;
-        const p = el("button", "pip-sq " + (kind === "succ" ? "succ" : "fail") + (filled ? " filled" : ""));
-        p.addEventListener("click", () => {
-          const cur = kind === "succ" ? c.death.succ : c.death.fail;
-          const nv = (i + 1 === cur) ? i : i + 1;   // click filled-top to step down
-          if (kind === "succ") c.death.succ = nv; else c.death.fail = nv;
-          save(); render();
-        });
-        r.appendChild(p);
+    const m = el("div","mini");
+    m.appendChild(el("div","eyebrow","Death saves"));
+    [["succ","save"],["fail","fail"]].forEach(([k,lbl])=>{
+      const g = el("div","row");
+      g.appendChild(el("span","tiny faint",lbl));
+      for(let i=0;i<3;i++){
+        const filled = c.death[k] > i;
+        const p = el("button","pip sq "+k+(filled?" filled":""));
+        p.addEventListener("click",()=>{ const v=c.death[k]; c.death[k]=(i+1===v)?i:i+1; saveAll(); renderTracker(); });
+        g.appendChild(p);
       }
-      return r;
-    };
-    m.append(mkRow("succ"), mkRow("fail"));
+      m.appendChild(g);
+    });
     return m;
   }
-
-  function inspirationMini(c) {
-    const m = el("div", "mini");
-    const mh = el("div", "mh"); mh.appendChild(el("span", "t", "Heroic Insp."));
-    m.appendChild(mh);
-    const t = el("div", "insp-toggle");
-    const dot = el("span", "insp-dot" + (c.inspiration ? " on" : ""));
-    t.append(dot, el("span", "tiny", c.inspiration ? "have it" : "none"));
-    t.addEventListener("click", () => { c.inspiration = !c.inspiration; save(); render(); });
+  function inspMini(c) {
+    const m = el("div","mini");
+    m.appendChild(el("div","eyebrow","Heroic inspiration"));
+    const t = el("div","insp");
+    t.append(el("span","insp-dot"+(c.inspiration?" on":"")), el("span","tiny", c.inspiration?"have it":"none"));
+    t.addEventListener("click",()=>{ c.inspiration=!c.inspiration; saveAll(); renderTracker(); });
     m.appendChild(t);
     return m;
   }
 
-  // ---------- combat / initiative ----------
-  function renderCombat() {
-    const list = document.getElementById("initList");
-    list.innerHTML = "";
-    if (state.combat.length === 0) {
-      list.appendChild(el("div", "empty-init", "No combatants. Add foes, or pull the party in with “Add PCs.”"));
+  /* ==========================================================
+     RENDER — map
+     ========================================================== */
+  function renderMap() {
+    document.getElementById("sceneTitle").textContent = MAP.title || "No scene loaded";
+    document.getElementById("roundN").textContent = MAP.round;
+    renderBoard(); renderTray(); renderLadder();
+  }
+
+  function renderBoard() {
+    const b = document.getElementById("board");
+    b.innerHTML = "";
+    if (!MAP.zones.length) {
+      b.style.gridTemplateColumns = "1fr"; b.style.gridTemplateRows = "1fr";
+      b.appendChild(el("div","empty","No scene on the board. Paste a map scene blob into Load blob."));
       return;
     }
-    state.combat.forEach(x => {
-      const row = el("div", "combatant" + (x.pc ? " pc" : "") + (x.id === state.activeId ? " active" : ""));
-      row.appendChild(el("span", "turn-dot"));
-      const iv = el("div", "init-v");
-      const iI = el("input"); iI.type = "number"; iI.value = x.init;
-      iI.addEventListener("input", () => { x.init = num(iI.value, 0); queueSave(); });
-      iv.appendChild(iI); row.appendChild(iv);
-      const cn = el("div", "cname");
-      const nI = el("input"); nI.value = x.name;
-      nI.addEventListener("input", () => { x.name = nI.value; queueSave(); });
-      cn.appendChild(nI); row.appendChild(cn);
-      const hp = el("div", "chp");
-      const h1 = el("input"); h1.type = "number"; h1.value = x.hp; h1.title = "HP";
-      h1.addEventListener("input", () => { x.hp = num(h1.value, 0); queueSave(); });
-      const h2 = el("input"); h2.type = "number"; h2.value = x.maxHp; h2.title = "Max HP";
-      h2.addEventListener("input", () => { x.maxHp = num(h2.value, 0); queueSave(); });
-      hp.append(h1, el("span", "s", "/"), h2); row.appendChild(hp);
-      const nt = el("div", "note");
-      const ntI = el("input"); ntI.value = x.note; ntI.placeholder = "note";
-      ntI.addEventListener("input", () => { x.note = ntI.value; queueSave(); });
-      nt.appendChild(ntI); row.appendChild(nt);
-      const rx = el("button", "x-btn", "✕");
-      rx.addEventListener("click", () => { state.combat = state.combat.filter(y => y.id !== x.id); if (state.activeId === x.id) state.activeId = null; save(); render(); });
-      row.appendChild(rx);
-      list.appendChild(row);
+    b.style.gridTemplateColumns = "repeat(" + MAP.grid[0] + ", 1fr)";
+    b.style.gridTemplateRows    = "repeat(" + MAP.grid[1] + ", 1fr)";
+    MAP.zones.forEach(z => {
+      const d = el("div", "zone" + (selectedToken ? " armed" : ""));
+      d.style.gridColumn = (z.at[0]+1) + " / span " + z.span[0];
+      d.style.gridRow    = (z.at[1]+1) + " / span " + z.span[1];
+      const h = el("div","zone-head");
+      h.append(el("span","zone-name",z.name), el("span","zone-terrain",z.terrain||""));
+      d.appendChild(h);
+      const tk = el("div","zone-tokens");
+      MAP.tokens.filter(t => t.zone === z.id).forEach(t => tk.appendChild(tokenEl(t)));
+      d.appendChild(tk);
+      d.addEventListener("click", (ev) => {
+        if (!selectedToken) return;
+        if (ev.target.closest(".token")) return;
+        const t = MAP.tokens.find(x => x.id === selectedToken);
+        if (t) { t.zone = z.id; selectedToken = null; saveAll(); renderMap(); }
+      });
+      b.appendChild(d);
     });
   }
 
-  // ================= WIRE-UP =================
-  document.getElementById("roundPlus").addEventListener("click", () => { state.round++; save(); render(); });
-  document.getElementById("roundMinus").addEventListener("click", () => { state.round = Math.max(1, state.round - 1); save(); render(); });
+  function renderTray() {
+    const tr = document.getElementById("tray");
+    tr.innerHTML = "";
+    tr.className = "tray" + (selectedToken ? " armed" : "");
+    tr.appendChild(el("span","tray-label","Off the board"));
+    // anything with no zone — or a zone id this scene doesn't have — lands here rather than vanishing
+    const known = new Set(MAP.zones.map(z => z.id));
+    const loose = MAP.tokens.filter(t => !t.zone || !known.has(t.zone));
+    if (!loose.length) tr.appendChild(el("span","tiny faint","everyone placed"));
+    loose.forEach(t => tr.appendChild(tokenEl(t)));
+    tr.addEventListener("click", trayClick);
+  }
+  function trayClick(ev) {
+    if (!selectedToken) return;
+    if (ev.target.closest(".token")) return;
+    const t = MAP.tokens.find(x => x.id === selectedToken);
+    if (t) { t.zone = null; selectedToken = null; saveAll(); renderMap(); }
+  }
 
-  document.getElementById("addFoe").addEventListener("click", () => {
-    state.combat.push({ id: uid(), name: "Foe", init: 10, hp: 11, maxHp: 11, note: "", pc: false });
-    save(); render();
-  });
-  document.getElementById("addPCs").addEventListener("click", () => {
-    state.characters.forEach(c => {
-      if (!state.combat.some(x => x.pc && x.name === c.name)) {
-        state.combat.push({ id: uid(), name: c.name, init: 0, hp: c.curHp, maxHp: c.maxHp, note: "", pc: true });
+  function tokenEl(t) {
+    const d = el("div", "token " + t.kind + (t.id === selectedToken ? " sel" : "") + (t.dead ? " dead" : ""));
+    d.appendChild(el("div","t-name",t.label));
+
+    if (t.kind === "enemy") {
+      const h = el("div","t-hp");
+      if (t.hideHp) {
+        h.appendChild(el("span","hidden-hp","HP ??"));
+      } else {
+        const i = el("input"); i.type="number"; i.value = t.hp;
+        i.title = "Type the number the DM just said. This field never does its own arithmetic.";
+        i.addEventListener("click", e => e.stopPropagation());
+        i.addEventListener("input", () => { t.hp = num(i.value, t.hp); queueSave(); });
+        i.addEventListener("change", () => { saveAll(); renderMap(); });
+        h.append(i, el("span","m","/ " + t.maxHp));
       }
+      d.appendChild(h);
+    }
+
+    if (t.conds.length) {
+      const cs = el("div","t-conds");
+      t.conds.slice(0,3).forEach(c => {
+        const ab = (CONDITIONS.find(x => x[0] === c) || [c, c.slice(0,3)])[1];
+        const chip = el("span","cond-chip",ab); chip.title = c; cs.appendChild(chip);
+      });
+      if (t.conds.length > 3) cs.appendChild(el("span","cond-chip more","+"+(t.conds.length-3)));
+      d.appendChild(cs);
+    }
+
+    const tools = el("div","t-tools");
+    const cb = el("button",null,"cond");
+    cb.title = "Set conditions";
+    cb.addEventListener("click", e => { e.stopPropagation(); openConds(t); });
+    tools.appendChild(cb);
+    if (t.kind === "enemy") {
+      const kb = el("button",null, t.dead ? "revive" : "down");
+      kb.title = t.dead ? "Put it back in the fight" : "Grey it out — stays on the board";
+      kb.addEventListener("click", e => { e.stopPropagation(); t.dead = !t.dead; saveAll(); renderMap(); });
+      const xb = el("button",null,"✕");
+      xb.title = "Remove this token entirely";
+      xb.addEventListener("click", e => {
+        e.stopPropagation();
+        MAP.tokens = MAP.tokens.filter(x => x.id !== t.id);
+        if (selectedToken === t.id) selectedToken = null;
+        saveAll(); renderMap();
+      });
+      tools.append(kb, xb);
+    }
+    d.appendChild(tools);
+
+    d.addEventListener("click", () => {
+      selectedToken = (selectedToken === t.id) ? null : t.id;
+      renderMap();
     });
-    save(); render();
+    return d;
+  }
+
+  function renderLadder() {
+    const L = document.getElementById("ladder");
+    L.innerHTML = "";
+    if (!MAP.ladder.length) { L.appendChild(el("div","empty","—")); return; }
+    // keyed first, sorted high→low; ties go to the PC (2024 default). Un-keyed park at the bottom, stable.
+    const keyed = MAP.ladder.filter(x => x.init !== null)
+      .sort((a,b) => (b.init - a.init) || ((b.pc?1:0) - (a.pc?1:0)));
+    const blank = MAP.ladder.filter(x => x.init === null);
+    keyed.concat(blank).forEach(x => {
+      const r = el("div","lad-row" + (x.pc ? " pc" : "") + (x.init === null ? " unkeyed" : ""));
+      const i = el("input"); i.type="number"; i.value = x.init === null ? "" : x.init; i.placeholder = "–";
+      i.addEventListener("input", () => {
+        const v = i.value.trim();
+        x.init = v === "" ? null : num(v, null);
+        queueSave();
+      });
+      i.addEventListener("change", () => { saveAll(); renderLadder(); });
+      r.append(i, el("span","ln",x.name));
+      L.appendChild(r);
+    });
+  }
+
+  /* ==========================================================
+     conditions modal
+     ========================================================== */
+  let condTarget = null;
+  function openConds(t) {
+    condTarget = t;
+    document.getElementById("condTitle").textContent = "Conditions · " + t.label;
+    const p = document.getElementById("condPick"); p.innerHTML = "";
+    CONDITIONS.forEach(([name]) => {
+      const b = el("button", t.conds.includes(name) ? "on" : "", name);
+      b.addEventListener("click", () => {
+        if (t.conds.includes(name)) t.conds = t.conds.filter(x => x !== name);
+        else t.conds.push(name);
+        saveAll(); openConds(t); renderMap();
+      });
+      p.appendChild(b);
+    });
+    document.getElementById("condBg").classList.add("open");
+  }
+
+  /* ==========================================================
+     the one Load box — detects shape, routes to one component
+     ========================================================== */
+  function classify(o) {
+    if (!o || typeof o !== "object" || Array.isArray(o)) return null;
+    if (o.kind === "tracker") return "tracker";
+    if (o.kind === "scene")   return o.mode === "add" ? "scene-add" : "scene";
+    if (Array.isArray(o.characters)) return "tracker";
+    if (o.mode === "add") return "scene-add";
+    if (Array.isArray(o.zones) || Array.isArray(o.enemies) || Array.isArray(o.tokens)) return "scene";
+    return null;
+  }
+
+  function applyBlob(text) {
+    const msg = document.getElementById("loadMsg");
+    let o;
+    try { o = JSON.parse(text); }
+    catch (e) { msg.className="load-msg err"; msg.textContent = "That isn't valid JSON. Check for a missing brace or a stray comma."; return; }
+
+    const kind = classify(o);
+    if (!kind) {
+      msg.className = "load-msg err";
+      msg.textContent = "Loaded, but this doesn't look like either blob. A party seed needs a \"characters\" list; a scene needs \"zones\" or \"enemies\". Nothing was changed.";
+      return;
+    }
+    if (kind === "tracker") {
+      const t = migrateTracker(o);
+      if (!t) { msg.className="load-msg err"; msg.textContent="That party seed couldn't be read. Nothing was changed."; return; }
+      TRK = t; saveAll(); renderTracker();
+      msg.className="load-msg ok"; msg.textContent = "Party loaded — " + TRK.characters.length + " characters.";
+    } else if (kind === "scene") {
+      MAP = expandScene(o, null); selectedToken = null; saveAll(); renderMap();
+      msg.className="load-msg ok";
+      msg.textContent = "Scene loaded — " + MAP.zones.length + " zones, " + MAP.tokens.length + " tokens.";
+    } else {
+      const before = MAP.tokens.length;
+      MAP = expandScene(o, MAP); saveAll(); renderMap();
+      msg.className="load-msg ok";
+      msg.textContent = "Reinforcements added — " + (MAP.tokens.length - before) + " new tokens. Nothing already on the board was touched.";
+    }
+    setTimeout(closeAllModals, 900);
+  }
+
+  /* ==========================================================
+     wire-up
+     ========================================================== */
+  function closeAllModals(){ document.querySelectorAll(".modal-bg").forEach(m => m.classList.remove("open")); }
+  document.querySelectorAll(".modal-bg").forEach(m => {
+    m.addEventListener("click", e => { if (e.target === m) closeAllModals(); });
   });
-  document.getElementById("sortInit").addEventListener("click", () => {
-    state.combat.sort((a, b) => b.init - a.init); save(); render();
-  });
-  document.getElementById("nextTurn").addEventListener("click", () => {
-    if (state.combat.length === 0) return;
-    const order = state.combat;
-    let idx = order.findIndex(x => x.id === state.activeId);
-    if (idx === -1) { state.activeId = order[0].id; save(); render(); return; }
-    if (idx === order.length - 1) { state.round++; state.activeId = order[0].id; }
-    else { state.activeId = order[idx + 1].id; }
-    save(); render();
-  });
-  document.getElementById("clearInit").addEventListener("click", () => {
-    if (state.combat.length === 0 || confirm("Clear the initiative order?")) { state.combat = []; state.activeId = null; save(); render(); }
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape") { if (selectedToken) { selectedToken = null; renderMap(); } closeAllModals(); }
   });
 
-  document.getElementById("restShortAll").addEventListener("click", () => {
-    if (confirm("Short rest for the whole party?")) { state.characters.forEach(shortRest); save(); render(); }
-  });
-  document.getElementById("restLongAll").addEventListener("click", () => {
-    if (confirm("Long rest for the whole party? (full HP, reset resources, exhaustion −1, recover half hit dice)")) { state.characters.forEach(longRest); save(); render(); }
-  });
-  document.getElementById("addCharBtn").addEventListener("click", () => {
-    state.characters.push({
-      id: uid(), name: "New Character", ac: 10, maxHp: 10, curHp: 10, tempHp: 0,
-      hd: { die: "d8", max: 1, used: 0, conMod: 0 },
-      exhaustion: 0, inspiration: false, death: { succ: 0, fail: 0 }, notes: "",
-      resources: []
-    });
-    save(); render();
+  document.getElementById("scaleSet").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    UI.scale = b.dataset.s; document.documentElement.dataset.scale = UI.scale;
+    document.querySelectorAll("#scaleSet button").forEach(x => x.classList.toggle("on", x.dataset.s === UI.scale));
+    saveAll();
   });
 
-  // save / load / export / import
-  function stateJSON() { state.savedAt = new Date().toISOString(); return JSON.stringify(state, null, 2); }
-  document.getElementById("copyState").addEventListener("click", async () => {
-    const txt = stateJSON();
-    try { await navigator.clipboard.writeText(txt); flashBtn("copyState", "Copied ✓"); }
-    catch (e) { openModal("Copy state", "Copy the JSON below (clipboard was blocked).", txt, null, true); }
+  document.getElementById("openLoad").addEventListener("click", () => {
+    document.getElementById("loadText").value = "";
+    document.getElementById("loadMsg").textContent = "";
+    document.getElementById("loadMsg").className = "load-msg";
+    document.getElementById("loadBg").classList.add("open");
+    document.getElementById("loadText").focus();
   });
-  document.getElementById("exportState").addEventListener("click", () => {
-    const blob = new Blob([stateJSON()], { type: "application/json" });
+  document.getElementById("loadCancel").addEventListener("click", closeAllModals);
+  document.getElementById("loadGo").addEventListener("click", () => applyBlob(document.getElementById("loadText").value));
+
+  document.getElementById("openExport").addEventListener("click", () => {
+    document.getElementById("exportText").value = JSON.stringify(TRK, null, 2);
+    document.getElementById("exportBg").classList.add("open");
+  });
+  document.getElementById("exportClose").addEventListener("click", closeAllModals);
+  document.getElementById("copyTracker").addEventListener("click", async () => {
+    const t = JSON.stringify(TRK, null, 2);
+    document.getElementById("exportText").value = t;
+    try { await navigator.clipboard.writeText(t); flash("copyTracker","Copied ✓"); } catch(e){}
+  });
+  document.getElementById("copyScene").addEventListener("click", async () => {
+    const t = JSON.stringify(MAP, null, 2);
+    document.getElementById("exportText").value = t;
+    try { await navigator.clipboard.writeText(t); flash("copyScene","Copied ✓"); } catch(e){}
+  });
+  document.getElementById("dlTracker").addEventListener("click", () => {
+    const d = new Date().toISOString().slice(0,10);
+    const b = new Blob([JSON.stringify(TRK, null, 2)], {type:"application/json"});
     const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "westmere-tracker-state.json";
+    a.href = URL.createObjectURL(b); a.download = "confluence-closeout-" + d + ".json";
     a.click(); URL.revokeObjectURL(a.href);
   });
-  document.getElementById("importState").addEventListener("click", () => document.getElementById("fileInput").click());
-  document.getElementById("fileInput").addEventListener("change", (e) => {
-    const f = e.target.files[0]; if (!f) return;
-    const rd = new FileReader();
-    rd.onload = () => { applyImport(rd.result); e.target.value = ""; };
-    rd.readAsText(f);
+  function flash(id, txt){ const b=document.getElementById(id); const o=b.textContent; b.textContent=txt; setTimeout(()=>b.textContent=o,1200); }
+
+  document.getElementById("condClose").addEventListener("click", closeAllModals);
+  document.getElementById("helpClose").addEventListener("click", closeAllModals);
+  document.getElementById("openHelp").addEventListener("click", () => document.getElementById("helpBg").classList.add("open"));
+
+  document.getElementById("restShortAll").addEventListener("click", () => {
+    if (confirm("Short rest for the whole party?")) { TRK.characters.forEach(shortRest); saveAll(); renderTracker(); }
   });
-  document.getElementById("loadState").addEventListener("click", () => {
-    openModal("Load state", "Paste a saved JSON blob below and choose Load. This replaces the current table state.", "", applyImport, false);
+  document.getElementById("restLongAll").addEventListener("click", () => {
+    if (confirm("Long rest for the whole party? Full HP, resources back, exhaustion −1, half the hit dice returned.")) {
+      TRK.characters.forEach(longRest); saveAll(); renderTracker();
+    }
   });
-  document.getElementById("resetState").addEventListener("click", () => {
-    if (confirm("Reset to the default seed? This wipes the current table state on this device.")) { state = seed(); save(); render(); }
+  document.getElementById("addChar").addEventListener("click", () => {
+    TRK.characters.push(pc("New character", 10, null, "", 10, "d8", 1, 0, []));
+    saveAll(); renderTracker();
   });
 
-  function applyImport(text) {
-    try {
-      const obj = migrate(JSON.parse(text));
-      if (!obj || !Array.isArray(obj.characters)) throw new Error("bad");
-      state = obj; save(); render(); closeModal();
-    } catch (e) { alert("That didn’t parse as valid tracker JSON. Check the blob and try again."); }
-  }
-  function flashBtn(id, txt) {
-    const b = document.getElementById(id); const old = b.textContent;
-    b.textContent = txt; setTimeout(() => { b.textContent = old; }, 1200);
-  }
+  document.getElementById("roundPlus").addEventListener("click", () => { MAP.round++; saveAll(); renderMap(); });
+  document.getElementById("roundMinus").addEventListener("click", () => { MAP.round = Math.max(1, MAP.round-1); saveAll(); renderMap(); });
+  document.getElementById("clearScene").addEventListener("click", () => {
+    if (confirm("Clear the board? The party tracker is not affected.")) { MAP = mapSeed(); selectedToken = null; saveAll(); renderMap(); }
+  });
+  document.getElementById("addEnemy").addEventListener("click", () => {
+    const name = prompt("Name?"); if (!name) return;
+    const hp = num(prompt("HP?"), 1);
+    MAP.tokens.push({ id: uid(), kind:"enemy", group:name, idx:0, label:name,
+                      hp, maxHp:hp, hideHp:false, zone:null, conds:[], dead:false });
+    if (!MAP.ladder.some(l => l.name === name)) MAP.ladder.push({id:uid(), name, pc:false, init:null});
+    saveAll(); renderMap();
+  });
 
-  // modal
-  let modalConfirmFn = null, modalReadonly = false;
-  function openModal(title, hint, text, confirmFn, readonly) {
-    document.getElementById("modalTitle").textContent = title;
-    document.getElementById("modalHint").textContent = hint;
-    const ta = document.getElementById("modalText");
-    ta.value = text; ta.readOnly = !!readonly;
-    modalConfirmFn = confirmFn; modalReadonly = !!readonly;
-    document.getElementById("modalConfirm").style.display = confirmFn ? "" : "none";
-    document.getElementById("modalCancel").textContent = confirmFn ? "Cancel" : "Close";
-    document.getElementById("modalBg").classList.add("open");
-    if (readonly) ta.select();
-  }
-  function closeModal() { document.getElementById("modalBg").classList.remove("open"); modalConfirmFn = null; }
-  document.getElementById("modalCancel").addEventListener("click", closeModal);
-  document.getElementById("modalConfirm").addEventListener("click", () => { if (modalConfirmFn) modalConfirmFn(document.getElementById("modalText").value); });
-  document.getElementById("modalBg").addEventListener("click", (e) => { if (e.target.id === "modalBg") closeModal(); });
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
+  // help examples
+  document.getElementById("helpScene").textContent = JSON.stringify({
+    kind:"scene", title:"The Sunken Jetty", grid:[4,3],
+    zones:[
+      {id:"jetty", name:"The Jetty", at:[0,1], span:[2,1], terrain:"wet planking — difficult terrain"},
+      {id:"water", name:"Open Water", at:[2,0], span:[2,3], terrain:"swim speed or half movement"}
+    ],
+    enemies:[
+      {name:"Skeleton", count:4, hp:13, zone:"water"},
+      {name:"The Drowned Warden", hp:44, zone:"jetty", hideHp:true}
+    ],
+    pcs:["Brogga Kalder","Brann Kalder","Raffe Vask","Aelrith"]
+  }, null, 2);
+  document.getElementById("helpAdd").textContent = JSON.stringify({
+    kind:"scene", mode:"add",
+    enemies:[{name:"Ghoul", count:2, hp:22, zone:"water"}]
+  }, null, 2);
 
-  // first paint + status
-  render();
-  if (state.savedAt) setStatus("saved"); else save();
+  // first paint
+  document.documentElement.dataset.scale = UI.scale || "m";
+  document.querySelectorAll("#scaleSet button").forEach(x => x.classList.toggle("on", x.dataset.s === (UI.scale||"m")));
+  renderTracker(); renderMap();
+  if (TRK.savedAt) setStatus(true); else saveAll();
 })();
 </script>
 </body>
