@@ -88,7 +88,7 @@
   /* ================= stage ================= */
   .stage {
     flex: 1; min-height: 0;
-    display: grid; grid-template-columns: clamp(340px, 33vw, 700px) 1fr;
+    display: grid; grid-template-columns: clamp(360px, 42vw, 900px) 1fr;
     gap: 0.6rem; padding: 0.6rem; overflow: hidden;
   }
   .panel {
@@ -108,7 +108,7 @@
   .panel-body { flex: 1; min-height: 0; overflow: auto; padding: 0.6rem; }
 
   /* ================= tracker cards ================= */
-  .chars { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 0.55rem; align-content: start; }
+  .chars { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 0.5rem; align-content: start; }
   .card { background: var(--panel-3); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
   .card.bloodied { border-color: #5a2f2c; }
   .card.down { border-color: var(--red); box-shadow: 0 0 0 1px rgba(216,97,92,0.35); }
@@ -121,11 +121,11 @@
   .ac-alt { font-size: 0.66rem; padding: 0.15rem 0.35rem; border-radius: 5px; }
   .ac-alt.on { border-color: var(--blue); color: var(--blue); }
 
-  .card-body { padding: 0.5rem; display: flex; flex-direction: column; gap: 0.45rem; }
+  .card-body { padding: 0.45rem; display: flex; flex-direction: column; gap: 0.35rem; }
 
-  .hp-block { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+  .hp-block { display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap; }
   .hp-big { display: flex; align-items: baseline; gap: 0.15rem; font-variant-numeric: tabular-nums; }
-  .hp-big .cur { font-size: 2.1rem; font-weight: 700; line-height: 1; }
+  .hp-big .cur { font-size: 1.85rem; font-weight: 700; line-height: 1; }
   .hp-big .sep { font-size: 1.1rem; color: var(--ink-faint); }
   .hp-big .max { font-size: 1.1rem; color: var(--ink-dim); }
   .cur.ok { color: var(--green); } .cur.bloodied { color: var(--amber); } .cur.down { color: var(--red); }
@@ -139,8 +139,8 @@
   .temp-chip input { width: 2.4rem; text-align: center; }
 
   /* resources */
-  .res { display: flex; align-items: center; gap: 0.4rem; }
-  .res-name { font-size: 0.8rem; font-weight: 600; width: 8.6rem; flex: none;
+  .res { display: flex; align-items: center; gap: 0.35rem; }
+  .res-name { font-size: 0.8rem; font-weight: 600; flex: 0 1 7.4rem; min-width: 3.5rem;
               overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .tag { font-size: 0.6rem; letter-spacing: 0.06em; text-transform: uppercase;
          border: 1px solid var(--line); border-radius: 4px; padding: 0 0.25rem; color: var(--ink-dim);
@@ -148,8 +148,8 @@
   .tag.short { color: var(--blue); border-color: #2c4a5e; }
   .tag.long  { color: var(--amber); border-color: var(--amber-dim); }
   .tag.none  { color: var(--ink-faint); }
-  .pips { display: flex; gap: 0.22rem; flex-wrap: wrap; align-items: center; }
-  .pip { width: 1.05rem; height: 1.05rem; border-radius: 50%; padding: 0;
+  .pips { display: flex; gap: 0.2rem; flex-wrap: wrap; align-items: center; margin-left: auto; }
+  .pip { width: 0.95rem; height: 0.95rem; border-radius: 50%; padding: 0; flex: none;
          border: 2px solid var(--amber-dim); background: transparent; }
   .pip.filled { background: var(--amber); border-color: var(--amber); box-shadow: 0 0 6px rgba(230,168,73,0.4); }
   .pip:hover { border-color: var(--amber); }
@@ -740,6 +740,7 @@
   }
 
   function resRow(c, r) {
+    const setup = openDrawers.has(c.id);   // the –/+ count adjusters are prep, not play
     const box = el("div", "res");
     const nm = el("div", "res-name", r.name);
     nm.title = r.hint || r.name;
@@ -750,9 +751,11 @@
       saveAll(); renderTracker();
     });
     const pips = el("div", "pips");
-    const dec = el("button","tag","–"); dec.title = "Fewer";
-    dec.addEventListener("click", () => { r.max = Math.max(0, r.max-1); r.used = Math.min(r.used, r.max); saveAll(); renderTracker(); });
-    pips.appendChild(dec);
+    if (setup) {
+      const dec = el("button","tag","–"); dec.title = "Fewer";
+      dec.addEventListener("click", () => { r.max = Math.max(0, r.max-1); r.used = Math.min(r.used, r.max); saveAll(); renderTracker(); });
+      pips.appendChild(dec);
+    }
     for (let i = 0; i < r.max; i++) {
       const avail = r.max - r.used;
       const p = el("button", "pip" + (i < avail ? " filled" : ""));
@@ -764,9 +767,11 @@
       });
       pips.appendChild(p);
     }
-    const inc = el("button","tag","+"); inc.title = "More";
-    inc.addEventListener("click", () => { r.max += 1; saveAll(); renderTracker(); });
-    pips.appendChild(inc);
+    if (setup) {
+      const inc = el("button","tag","+"); inc.title = "More";
+      inc.addEventListener("click", () => { r.max += 1; saveAll(); renderTracker(); });
+      pips.appendChild(inc);
+    }
     if (r.shortReturn > 0) {
       const s = el("span","tag short","+" + r.shortReturn + " short");
       s.title = "A short rest returns " + r.shortReturn + " expended use";
