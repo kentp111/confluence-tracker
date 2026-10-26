@@ -284,8 +284,10 @@
     <button data-s="s">S</button><button data-s="m">M</button><button data-s="l">L</button><button data-s="xl">XL</button>
   </div>
   <button class="btn-tide" id="openLoad">Load blob…</button>
+  <button id="dmFetch" title="Load the newest blob the DM has posted. The page also checks on every refresh, and applies each posting only once.">From the DM ⟳</button>
   <button id="openExport">Export…</button>
   <button id="openHelp" title="Blob formats and how this page works">?</button>
+  <span class="save-status" id="dmStatus"></span>
   <span class="save-status" id="saveStatus">—</span>
 </header>
 
@@ -395,6 +397,9 @@
   const K_TRK = "confluence:tracker:v1";
   const K_MAP = "confluence:map:v1";
   const K_UI  = "confluence:ui:v1";
+  const K_DM  = "confluence:dm:v1";   // sha of the last DM posting applied on this machine
+  const DM_URL = "https://api.github.com/repos/kentp111/confluence-tracker/contents/latest.json?ref=live";
+  const DM_STALE_HOURS = 12;          // older postings wait for the button instead of loading on refresh
 
   const CONDITIONS = [
     ["Prone","PRO"],["Restrained","RES"],["Grappled","GRA"],["Frightened","FRI"],
@@ -440,10 +445,10 @@
         res("Healing Word · free", 1, "long", 0, "Magic Initiate's daily free cast"),
         res("Stonecunning", 2, "long", 0, "")
       ]),
-      pc("Raffe Vask", 14, null, "", 24, "d8", 3, 2, [
+      pc("Nova Vask", 14, null, "", 24, "d8", 3, 2, [
         res("Pact slots · 2nd", 2, "short", 0, "both cast at 2nd level"),
         res("Magical Cunning", 1, "long", 0, "1-minute rite, one slot back"),
-        res("Ray of Sickness · free", 1, "long", 0, "Abyssal Legacy")
+        res("Hellish Rebuke · free", 1, "long", 0, "Infernal Legacy")
       ]),
       pc("Aelrith", 12, 15, "Mage Armor", 20, "d6", 3, 2, [
         res("Slots · 1st", 4, "long", 0, ""),
@@ -1046,17 +1051,17 @@
     const msg = document.getElementById("loadMsg");
     let o;
     try { o = JSON.parse(text); }
-    catch (e) { msg.className="load-msg err"; msg.textContent = "That isn't valid JSON. Check for a missing brace or a stray comma."; return; }
+    catch (e) { msg.className="load-msg err"; msg.textContent = "That isn't valid JSON. Check for a missing brace or a stray comma."; return false; }
 
     const kind = classify(o);
     if (!kind) {
       msg.className = "load-msg err";
       msg.textContent = "Loaded, but this doesn't look like either blob. A party seed needs a \"characters\" list; a scene needs \"zones\" or \"enemies\". Nothing was changed.";
-      return;
+      return false;
     }
     if (kind === "tracker") {
       const t = migrateTracker(o);
-      if (!t) { msg.className="load-msg err"; msg.textContent="That party seed couldn't be read. Nothing was changed."; return; }
+      if (!t) { msg.className="load-msg err"; msg.textContent="That party seed couldn't be read. Nothing was changed."; return false; }
       TRK = t; saveAll(); renderTracker();
       msg.className="load-msg ok"; msg.textContent = "Party loaded — " + TRK.characters.length + " characters.";
     } else if (kind === "scene") {
@@ -1070,6 +1075,47 @@
       msg.textContent = "Reinforcements added — " + (MAP.tokens.length - before) + " new tokens. Nothing already on the board was touched.";
     }
     setTimeout(closeAllModals, 900);
+    return true;
+  }
+
+  /* ==========================================================
+     From the DM — the newest blob the DM has posted to the repo's
+     "live" branch (latest.json). Checked on every page load and by
+     the button. Each posting is applied once per machine, so an
+     accidental refresh never wipes the board; pasting into Load
+     still works exactly as before and is the fallback.
+     ========================================================== */
+  function dmSay(text, cls) {
+    const e = document.getElementById("dmStatus");
+    e.textContent = text; e.className = "save-status" + (cls ? " " + cls : "");
+  }
+  async function checkDM(manual) {
+    dmSay("DM: checking…");
+    let r, j, text, o;
+    try { r = await fetch(DM_URL, { cache: "no-store", headers: { Accept: "application/vnd.github+json" } }); }
+    catch (e) { dmSay("DM: can't reach GitHub — paste instead", "warn"); return; }
+    if (r.status === 404) { dmSay("DM: nothing posted yet"); return; }
+    if (!r.ok) { dmSay("DM: GitHub said " + r.status + " — paste instead", "warn"); return; }
+    try {
+      j = await r.json();
+      text = new TextDecoder().decode(Uint8Array.from(atob((j.content || "").replace(/\s/g, "")), c => c.charCodeAt(0)));
+      o = JSON.parse(text);
+    } catch (e) { dmSay("DM: couldn't read the posting — paste instead", "warn"); return; }
+    let seen = null; try { seen = localStorage.getItem(K_DM); } catch (e) {}
+    if (j.sha && j.sha === seen) { dmSay(manual ? "DM: nothing new" : "DM: up to date"); return; }
+    const sent = o && o.sent ? Date.parse(o.sent) : NaN;
+    if (!manual && !isNaN(sent) && Date.now() - sent > DM_STALE_HOURS * 3600 * 1000) {
+      dmSay("DM: last posting is from " + new Date(sent).toLocaleDateString() + " — press From the DM to load it");
+      return;
+    }
+    const ok = applyBlob(text);
+    const said = document.getElementById("loadMsg").textContent;
+    if (ok) {
+      try { localStorage.setItem(K_DM, j.sha || ""); } catch (e) {}
+      dmSay("DM: " + said + " (" + new Date().toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"}) + ")");
+    } else {
+      dmSay("DM: " + said, "warn");
+    }
   }
 
   /* ==========================================================
@@ -1166,7 +1212,7 @@
       {name:"Skeleton", count:4, hp:13, zone:"water"},
       {name:"The Drowned Warden", hp:44, zone:"jetty", hideHp:true}
     ],
-    pcs:["Brogga Kalder","Brann Kalder","Raffe Vask","Aelrith"]
+    pcs:["Brogga Kalder","Brann Kalder","Nova Vask","Aelrith"]
   }, null, 2);
   document.getElementById("helpAdd").textContent = JSON.stringify({
     kind:"scene", mode:"add",
@@ -1178,6 +1224,8 @@
   document.querySelectorAll("#scaleSet button").forEach(x => x.classList.toggle("on", x.dataset.s === (UI.scale||"m")));
   renderTracker(); renderMap();
   if (TRK.savedAt) setStatus(true); else saveAll();
+  document.getElementById("dmFetch").addEventListener("click", () => checkDM(true));
+  checkDM(false);
 })();
 </script>
 </body>
