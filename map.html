@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Map of the Confluence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* A surveyor's chart of a wet city, laid on a dark table. Single theme by choice. */
+  --paper: #e6dfcd;
+  --paper-deep: #d6ccb3;
+  --ink: #2b2622;
+  --ink-soft: #625a4e;
+  --water: #4d7d85;
+  --water-deep: #345d64;
+  --shore: #c4b792;
+  --silt: #c39a5c;        /* surfaced ground */
+  --iron: #9b3e2e;        /* arc one: Nine Names */
+  --table: #1e1b18;       /* the room around the chart */
+  --panel: #2a2622;
+  --panel-rule: #4a423a;
+  --display: "IM Fell English", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --body: "Alegreya Sans", "Gill Sans", "Trebuchet MS", system-ui, sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0; background: var(--table); color: var(--paper);
+  font-family: var(--body); font-size: 17px; line-height: 1.45;
+  display: flex; flex-direction: column; min-height: 100%;
+}
+header {
+  display: flex; align-items: baseline; gap: 18px 28px; flex-wrap: wrap;
+  padding: 14px 20px 10px; border-bottom: 1px solid var(--panel-rule);
+}
+header h1 { font: 400 30px/1 var(--display); margin: 0; letter-spacing: .02em; color: var(--paper); }
+header h1 small { font-size: 17px; font-style: italic; color: #bfb39b; margin-left: 10px; letter-spacing: 0; }
+.controls { margin-left: auto; display: flex; gap: 8px 18px; flex-wrap: wrap; align-items: center; font-size: 15px; }
+.controls label { display: inline-flex; gap: 7px; align-items: center; cursor: pointer; color: #d8cfba; }
+.controls input { accent-color: var(--silt); width: 16px; height: 16px; margin: 0; }
+.controls .swatch { width: 14px; height: 14px; border-radius: 50%; display: inline-block; }
+button.ghost {
+  font: 500 15px var(--body); color: var(--paper); background: transparent;
+  border: 1px solid var(--panel-rule); border-radius: 6px; padding: 5px 11px; cursor: pointer;
+}
+button.ghost:hover { border-color: var(--paper-deep); }
+button.ghost:focus-visible, .controls input:focus-visible { outline: 2px solid var(--silt); outline-offset: 2px; }
+
+main {
+  flex: 1; display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 0; min-height: 0;
+}
+body.panel-hidden main { grid-template-columns: minmax(0, 1fr); }
+.sheet { position: relative; padding: 16px; display: flex; align-items: flex-start; justify-content: center; min-width: 0; }
+.sheet svg { width: 100%; height: auto; max-height: calc(100vh - 92px); display: block;
+  box-shadow: 0 2px 0 rgba(0,0,0,.4), 0 18px 40px rgba(0,0,0,.45); background: var(--paper); border-radius: 2px; }
+aside.panel {
+  background: var(--panel); border-left: 1px solid var(--panel-rule); padding: 16px 18px 24px;
+  display: flex; flex-direction: column; gap: 16px; overflow: auto; max-height: calc(100vh - 60px);
+}
+body.panel-hidden aside.panel { display: none; }
+
+#card {
+  background: var(--paper); color: var(--ink); border-radius: 4px; padding: 14px 16px 12px;
+  box-shadow: 0 6px 20px rgba(0,0,0,.35); border-top: 4px solid var(--ink);
+}
+#card.kind-arc { border-top-color: var(--iron); }
+#card.kind-district, #card.kind-intro { border-top-color: var(--silt); }
+#card h2 { font: 400 25px/1.1 var(--display); margin: 0 0 6px; text-wrap: balance; }
+#card .eyebrow { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 4px; }
+#card p { margin: 0 0 8px; font-size: 16px; line-height: 1.45; }
+#card .status { font-size: 14px; color: var(--ink-soft); font-style: italic; border-top: 1px solid var(--paper-deep); padding-top: 6px; margin-top: 4px; }
+body.panel-hidden #card { position: absolute; left: 32px; bottom: 32px; width: min(380px, calc(100% - 64px)); }
+
+.places h3 { font: 400 13px var(--body); letter-spacing: .16em; text-transform: uppercase; color: #a89c84; margin: 10px 0 6px; }
+.places ul { list-style: none; margin: 0; padding: 0; }
+.places li button {
+  width: 100%; text-align: left; background: transparent; border: 0; border-bottom: 1px solid var(--panel-rule);
+  color: var(--paper); font: 400 18px var(--display); padding: 7px 4px 7px 22px; cursor: pointer; position: relative; line-height: 1.2;
+}
+.places li button::before {
+  content: ""; position: absolute; left: 4px; top: 50%; width: 9px; height: 9px; margin-top: -5px; border-radius: 50%;
+  background: var(--paper); border: 1.5px solid var(--paper);
+}
+.places li.kind-arc button::before { background: var(--iron); border-color: var(--iron); }
+.places li.kind-district button::before { background: var(--silt); border-color: var(--silt); }
+.places li.unseen button::before { background: transparent; border-style: dashed; }
+.places li button:hover, .places li button.active { background: rgba(230,223,205,.08); }
+.places li button:focus-visible { outline: 2px solid var(--silt); outline-offset: -2px; }
+.places li button small { display: block; font: italic 13px var(--body); color: #a89c84; }
+.legend { font-size: 14px; color: #c9bfa8; display: grid; grid-template-columns: 26px 1fr; gap: 6px 8px; align-items: center; }
+.legend svg { width: 26px; height: 16px; display: block; overflow: visible; }
+
+/* ---------- the chart ---------- */
+svg#map text { font-family: var(--display); fill: var(--ink); paint-order: stroke fill; stroke: var(--paper); stroke-width: 5px; stroke-linejoin: round; pointer-events: none; }
+svg#map .dlabel { font-size: 24px; letter-spacing: .16em; text-anchor: middle; fill: var(--ink); }
+svg#map .dsub { font-size: 15px; font-style: italic; text-anchor: middle; fill: var(--ink-soft); }
+svg#map .label { font-size: 21px; }
+svg#map .note { font-size: 14px; font-style: italic; fill: var(--ink-soft); }
+svg#map .foot { font-size: 15px; font-style: italic; fill: var(--paper); stroke: var(--water-deep); stroke-width: 4px; }
+svg#map .shore path { fill: var(--shore); stroke: var(--shore); stroke-linecap: round; stroke-linejoin: round; }
+svg#map .water path { fill: var(--water); stroke: var(--water); stroke-linecap: round; stroke-linejoin: round; }
+svg#map .current path { fill: none; stroke: #7fa7ad; stroke-linecap: round; stroke-linejoin: round; opacity: .55; stroke-dasharray: 60 90; }
+svg#map .bridges use { stroke: var(--ink); fill: none; stroke-width: 2.2; }
+svg#map .terrace { fill: none; stroke: var(--ink-soft); stroke-width: 2; stroke-dasharray: 3 4; stroke-linecap: round; }
+svg#map .crest { fill: none; stroke: var(--water-deep); stroke-width: 2; stroke-dasharray: 10 8; opacity: .8; }
+svg#map .route { fill: none; stroke: var(--ink); stroke-width: 2.6; stroke-dasharray: 1 7; stroke-linecap: round; }
+svg#map .risings { fill: none; stroke: var(--iron); stroke-width: 1.8; stroke-dasharray: 6 6; opacity: .75; }
+svg#map .place, svg#map .district { cursor: pointer; outline: none; }
+svg#map .halo { fill: var(--ink); opacity: 0; transition: opacity .15s; }
+svg#map .place:hover .halo, svg#map .place.active .halo, svg#map .place:focus-visible .halo { opacity: .14; }
+svg#map .kind-arc .halo { fill: var(--iron); }
+svg#map .district .dhalo { fill: var(--silt); opacity: 0; transition: opacity .15s; }
+svg#map .district:hover .dhalo, svg#map .district.active .dhalo, svg#map .district:focus-visible .dhalo { opacity: .22; }
+svg#map .sym { stroke: var(--ink); fill: var(--paper); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+svg#map .kind-arc .sym { stroke: var(--iron); }
+svg#map .unseen .sym { stroke-dasharray: 3 3; }
+svg#map .glyph { stroke: var(--ink-soft); fill: var(--paper); stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
+svg#map.hide-arc #arc-layer { display: none; }
+svg#map.hide-crest #crest-layer { display: none; }
+svg#map.hide-drowned #drowned-layer { display: none; }
+svg#map.hide-route #route-layer { display: none; }
+
+@media (max-width: 900px) {
+  main { grid-template-columns: minmax(0, 1fr); }
+  aside.panel { border-left: 0; border-top: 1px solid var(--panel-rule); max-height: none; }
+  .sheet svg { max-height: none; }
+  body.panel-hidden #card { position: static; width: auto; margin: 12px 0 0; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+@media print {
+  body { background: #fff; }
+  header .controls, aside.panel { display: none; }
+  .sheet svg { box-shadow: none; max-height: none; }
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>The Confluence <small>as the party knows it &middot; dawn of day two &middot; arc one, Nine Names</small></h1>
+  <div class="controls">
+    <label><input type="checkbox" id="t-arc" checked> <span class="swatch" style="background:var(--iron)"></span>Nine Names</label>
+    <label><input type="checkbox" id="t-route" checked> day one's errand</label>
+    <label><input type="checkbox" id="t-crest" checked> flood crest</label>
+    <label><input type="checkbox" id="t-drowned" checked> the drowned city</label>
+    <button class="ghost" id="t-panel" type="button">Hide panel</button>
+  </div>
+</header>
+<main>
+  <div class="sheet">
+<svg id="map" viewBox="0 0 1600 1000" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="map-title">
+  <title id="map-title">Map of the Confluence as the party knows it, dawn of day two</title>
+  <defs>
+    <filter id="grain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="11" result="n"/>
+      <feColorMatrix in="n" type="saturate" values="0" result="g"/>
+      <feComponentTransfer in="g"><feFuncA type="linear" slope="0.11" intercept="0"/></feComponentTransfer>
+    </filter>
+    <radialGradient id="vignette" cx="50%" cy="50%" r="72%">
+      <stop offset="60%" stop-color="#000" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#6b5a3a" stop-opacity=".22"/>
+    </radialGradient>
+    <pattern id="ghost" width="46" height="46" patternUnits="userSpaceOnUse" patternTransform="rotate(18)">
+      <path d="M0,23 H46 M23,0 V46" stroke="#2b2622" stroke-width="1" opacity=".16" fill="none"/>
+      <rect x="4" y="4" width="14" height="10" fill="none" stroke="#2b2622" stroke-width=".8" opacity=".12"/>
+      <rect x="27" y="28" width="12" height="12" fill="none" stroke="#2b2622" stroke-width=".8" opacity=".12"/>
+    </pattern>
+    <pattern id="hatch" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(-35)">
+      <path d="M0,5 H10" stroke="#345d64" stroke-width="1.4" opacity=".38"/>
+    </pattern>
+    <path id="steps-island" d="M1163.5,330.0 L1163.7,330.6 L1164.6,333.9 L1165.7,337.2 L1166.9,340.5 L1168.1,343.7 L1169.4,347.0 L1170.8,350.2 L1172.2,353.4 L1173.7,356.7 L1175.2,359.9 L1176.8,363.1 L1178.4,366.2 L1180.1,369.4 L1181.8,372.6 L1183.5,375.8 L1185.2,379.0 L1186.9,382.1 L1188.7,385.3 L1190.4,388.5 L1192.1,391.6 L1193.8,394.8 L1195.5,398.0 L1197.2,401.1 L1198.8,404.3 L1200.4,407.5 L1201.9,410.7 L1203.4,413.9 L1204.9,417.1 L1206.3,420.3 L1207.6,423.5 L1208.8,426.8 L1210.0,430.0 L1211.2,433.2 L1212.4,436.5 L1213.6,439.7 L1214.9,443.0 L1216.2,446.2 L1217.5,449.4 L1218.9,452.6 L1220.3,455.8 L1221.7,459.1 L1223.2,462.3 L1224.6,465.5 L1226.0,468.7 L1227.5,471.9 L1228.9,475.1 L1230.3,478.3 L1231.8,481.5 L1233.2,484.7 L1234.5,487.9 L1235.9,491.2 L1237.2,494.4 L1238.5,497.6 L1239.7,500.8 L1240.9,504.0 L1242.0,507.3 L1243.1,510.5 L1244.2,513.8 L1245.1,517.0 L1246.0,520.3 L1246.9,523.5 L1247.6,526.8 L1248.3,530.1 L1248.9,533.4 L1249.4,536.7 L1249.8,540.0 L1250.1,543.3 L1250.3,546.6 L1250.4,549.9 L1250.4,553.3 L1250.3,556.6 L1250.0,560.0 L1249.6,563.4 L1249.1,566.8 L1248.4,570.3 L1247.6,573.8 L1246.7,577.3 L1245.7,580.8 L1244.6,584.4 L1243.3,588.0 L1242.0,591.6 L1240.5,595.2 L1239.0,598.9 L1237.4,602.5 L1235.8,606.2 L1234.0,609.9 L1232.2,613.5 L1230.4,617.2 L1228.5,620.9 L1226.5,624.5 L1224.5,628.2 L1222.5,631.9 L1220.5,635.5 L1218.4,639.2 L1216.3,642.8 L1214.2,646.4 L1212.2,650.0 L1210.1,653.6 L1208.0,657.1 L1206.0,660.6 L1203.9,664.1 L1202.0,667.6 L1200.0,671.0 L1198.1,674.4 L1196.2,677.8 L1194.4,681.1 L1192.6,684.3 L1191.0,687.6 L1189.3,690.8 L1187.8,693.9 L1186.4,697.0 L1185.0,700.0 L1183.7,703.0 L1182.3,705.9 L1180.9,708.8 L1179.5,711.6 L1178.1,714.4 L1176.6,717.2 L1175.2,719.9 L1173.7,722.6 L1172.3,725.2 L1170.8,727.8 L1169.3,730.4 L1167.9,732.9 L1166.4,735.5 L1165.0,738.0 L1163.6,740.4 L1162.2,742.9 L1160.8,745.3 L1159.5,747.7 L1158.2,750.0 L1164.2,750.0 L1185.9,757.1 L1207.7,763.3 L1229.5,768.7 L1251.4,773.3 L1273.3,776.9 L1295.2,779.7 L1317.2,781.6 L1339.2,782.5 L1361.1,782.5 L1383.1,781.5 L1405.1,779.6 L1427.0,776.7 L1448.8,772.8 L1470.7,767.9 L1492.4,762.0 L1514.1,755.0 L1521.4,335.0 L1519.7,753.6 L1518.9,750.9 L1518.0,748.3 L1517.2,745.6 L1516.4,742.9 L1515.6,740.1 L1514.8,737.4 L1513.9,734.6 L1513.1,731.7 L1512.3,728.8 L1511.5,725.9 L1510.8,723.0 L1510.0,720.0 L1509.2,717.0 L1508.4,713.9 L1507.5,710.8 L1506.5,707.6 L1505.5,704.3 L1504.4,701.1 L1503.3,697.8 L1502.2,694.4 L1501.0,691.0 L1499.8,687.6 L1498.5,684.1 L1497.3,680.6 L1496.0,677.1 L1494.7,673.6 L1493.4,670.0 L1492.1,666.4 L1490.8,662.8 L1489.5,659.2 L1488.2,655.5 L1486.9,651.9 L1485.6,648.2 L1484.3,644.5 L1483.1,640.9 L1481.9,637.2 L1480.8,633.5 L1479.6,629.9 L1478.5,626.2 L1477.5,622.5 L1476.5,618.9 L1475.5,615.2 L1474.7,611.6 L1473.8,608.0 L1473.1,604.4 L1472.4,600.8 L1471.8,597.3 L1471.3,593.8 L1470.8,590.3 L1470.4,586.8 L1470.2,583.4 L1470.0,580.0 L1469.9,576.6 L1469.9,573.3 L1470.0,570.0 L1470.2,566.7 L1470.5,563.4 L1470.8,560.1 L1471.2,556.9 L1471.7,553.7 L1472.2,550.5 L1472.8,547.3 L1473.5,544.1 L1474.2,540.9 L1474.9,537.7 L1475.7,534.6 L1476.6,531.4 L1477.4,528.2 L1478.4,525.1 L1479.3,521.9 L1480.3,518.8 L1481.2,515.6 L1482.3,512.5 L1483.3,509.3 L1484.3,506.1 L1485.4,503.0 L1486.4,499.8 L1487.5,496.6 L1488.5,493.4 L1489.5,490.2 L1490.6,486.9 L1491.6,483.7 L1492.6,480.4 L1493.5,477.1 L1494.5,473.8 L1495.4,470.5 L1496.2,467.1 L1497.1,463.8 L1497.9,460.4 L1498.6,456.9 L1499.3,453.5 L1500.0,450.0 L1500.6,446.5 L1501.3,443.0 L1502.0,439.4 L1502.8,435.8 L1503.6,432.2 L1504.4,428.6 L1505.2,424.9 L1506.0,421.3 L1506.8,417.6 L1507.7,413.9 L1508.6,410.2 L1509.4,406.5 L1510.3,402.7 L1511.1,399.0 L1512.0,395.2 L1512.8,391.4 L1513.6,387.7 L1514.4,383.9 L1515.2,380.1 L1515.9,376.2 L1516.7,372.4 L1517.3,368.6 L1518.0,364.8 L1518.6,361.0 L1519.2,357.1 L1519.7,353.3 L1520.1,349.5 L1520.6,345.6 L1520.9,341.8 L1521.2,338.0 L1520.1,755.0 L1515.4,335.0 L1493.9,329.7 L1472.4,324.9 L1450.9,320.8 L1429.2,317.3 L1407.6,314.5 L1385.9,312.3 L1364.2,310.8 L1342.5,310.0 L1320.7,309.9 L1299.0,310.5 L1277.3,311.8 L1255.7,313.9 L1234.0,316.8 L1212.5,320.4 L1191.0,324.8 L1169.5,330.0 Z"/>
+<path id="lowq-island" d="M977.5,662.0 L978.1,663.5 L979.7,666.8 L981.1,670.1 L982.5,673.5 L983.8,676.7 L985.0,680.0 L986.2,683.2 L987.4,686.5 L988.6,689.7 L989.9,692.9 L991.1,696.1 L992.4,699.3 L993.6,702.4 L994.9,705.6 L996.1,708.7 L997.4,711.9 L998.6,715.0 L999.9,718.1 L1001.1,721.2 L1002.3,724.3 L1003.5,727.3 L1004.6,730.4 L1005.8,733.4 L1006.9,736.5 L1008.0,739.5 L1009.1,742.5 L1010.1,745.5 L1011.1,748.5 L1012.0,751.4 L1013.0,754.4 L1013.8,757.3 L1014.7,760.3 L1015.4,763.2 L1016.2,766.1 L1016.8,769.0 L1017.5,771.9 L1018.0,774.7 L1018.5,777.6 L1019.0,780.4 L1019.3,783.3 L1019.6,786.1 L1019.9,788.9 L1020.0,791.7 L1020.1,794.5 L1020.1,797.2 L1020.0,800.0 L1019.8,802.8 L1019.5,805.6 L1019.1,808.4 L1018.5,811.3 L1017.9,814.1 L1017.2,817.0 L1016.3,820.0 L1015.4,822.9 L1014.4,825.8 L1013.3,828.8 L1012.2,831.7 L1011.0,834.6 L1009.7,837.5 L1008.4,840.5 L1007.0,843.4 L1005.6,846.2 L1004.2,849.1 L1002.7,851.9 L1001.2,854.7 L999.7,857.5 L998.2,860.2 L996.6,862.9 L995.1,865.6 L993.6,868.2 L992.1,870.7 L990.6,873.2 L989.1,875.6 L987.7,878.0 L986.3,880.3 L985.0,882.5 L983.7,884.6 L983.4,885.0 L1198.3,885.0 L1201.7,668.0 L1197.7,884.3 L1195.9,882.0 L1193.9,879.7 L1192.0,877.4 L1189.9,874.9 L1187.9,872.4 L1185.8,869.8 L1183.6,867.2 L1181.5,864.5 L1179.3,861.8 L1177.2,859.0 L1175.0,856.2 L1172.9,853.4 L1170.7,850.6 L1168.6,847.7 L1166.6,844.8 L1164.5,841.9 L1162.6,839.0 L1160.7,836.1 L1158.8,833.1 L1157.1,830.2 L1155.4,827.3 L1153.8,824.5 L1152.3,821.6 L1150.9,818.8 L1149.7,816.0 L1148.5,813.2 L1147.5,810.5 L1146.7,807.8 L1146.0,805.1 L1145.4,802.5 L1145.0,800.0 L1144.7,797.5 L1144.6,795.0 L1144.6,792.6 L1144.6,790.2 L1144.8,787.8 L1145.1,785.4 L1145.4,783.0 L1145.9,780.6 L1146.4,778.3 L1147.0,775.9 L1147.7,773.6 L1148.5,771.3 L1149.3,768.9 L1150.2,766.6 L1151.2,764.3 L1152.2,761.9 L1153.3,759.6 L1154.5,757.2 L1155.6,754.9 L1156.9,752.5 L1158.1,750.1 L1159.5,747.7 L1160.8,745.3 L1162.2,742.9 L1163.6,740.4 L1165.0,738.0 L1166.4,735.5 L1167.9,732.9 L1169.3,730.4 L1170.8,727.8 L1172.3,725.2 L1173.7,722.6 L1175.2,719.9 L1176.6,717.2 L1178.1,714.4 L1179.5,711.6 L1180.9,708.8 L1182.3,705.9 L1183.7,703.0 L1185.0,700.0 L1186.4,697.0 L1187.8,693.9 L1189.3,690.8 L1191.0,687.6 L1192.6,684.3 L1194.4,681.1 L1196.2,677.8 L1198.1,674.4 L1200.0,671.0 L1198.3,885.0 L1150.0,652.0 L1120.0,664.0 L1085.0,648.0 L1050.0,662.0 L1020.0,650.0 L977.5,662.0 Z"/>
+    <clipPath id="drowned-clip">
+      <use href="#steps-island"/><use href="#lowq-island"/>
+    </clipPath>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#2b2622"/>
+    </marker>
+
+    <!-- bridge glyph, drawn spanning the x axis; rotated per river -->
+    <symbol id="sym-bridge" viewBox="-20 -20 40 40" width="40" height="40" x="-20" y="-20" overflow="visible">
+      <path d="M-15,-5 Q0,-11 15,-5 M-15,5 Q0,-1 15,5 M-15,-5 V5 M15,-5 V5"/>
+    </symbol>
+    <!-- place symbols -->
+    <symbol id="sym-temple" viewBox="-16 -16 32 32" width="32" height="32" x="-16" y="-16" overflow="visible">
+      <circle cx="-8" cy="0" r="7.5"/><circle cx="8" cy="0" r="7.5"/><circle cx="0" cy="0" r="7.5"/>
+    </symbol>
+    <symbol id="sym-archive" viewBox="-16 -16 32 32" width="32" height="32" x="-16" y="-16" overflow="visible">
+      <path d="M-13,-7 Q-6,-11 0,-7 Q6,-11 13,-7 L13,8 Q6,4 0,8 Q-6,4 -13,8 Z M0,-7 V8"/>
+    </symbol>
+    <symbol id="sym-rolls" viewBox="-16 -16 32 32" width="32" height="32" x="-16" y="-16" overflow="visible">
+      <path d="M-10,-9 H10 V9 H-10 Z M-6,-3 H6 M-6,1 H6 M-6,5 H2"/>
+    </symbol>
+    <symbol id="sym-guild" viewBox="-16 -16 32 32" width="32" height="32" x="-16" y="-16" overflow="visible">
+      <path d="M-12,10 L-2,-10 L8,10 M-7,2 H3 M-2,-10 L13,-5 M13,-5 V2"/><circle cx="13" cy="4" r="2"/>
+    </symbol>
+    <symbol id="sym-landing" viewBox="-16 -16 32 32" width="32" height="32" x="-16" y="-16" overflow="visible">
+      <path d="M-14,11 H14 M-10,11 L-2,-11 L6,11 M-2,-11 L13,-7 M13,-7 V-1"/><circle cx="13" cy="1" r="2.5"/>
+    </symbol>
+    <symbol id="sym-house" viewBox="-16 -16 32 32" width="32" height="32" x="-16" y="-16" overflow="visible">
+      <path d="M-12,10 V-6 L0,-13 L12,-6 V10 Z M-3,10 V2 H3 V10"/>
+      <rect x="-9" y="-3" width="4" height="4"/><rect x="5" y="-3" width="4" height="4"/>
+    </symbol>
+    <symbol id="sym-terrace" viewBox="-16 -16 32 32" width="32" height="32" x="-16" y="-16" overflow="visible">
+      <path d="M-14,4 V-6 L-7,-10 L0,-6 V4 Z M0,8 V-2 L7,-6 L14,-2 V8 Z"/>
+    </symbol>
+    <symbol id="sym-slab" viewBox="-16 -16 32 32" width="32" height="32" x="-16" y="-16" overflow="visible">
+      <path d="M-13,-8 H13 V8 H-13 Z"/><text x="0" y="4.5" font-size="12" text-anchor="middle" style="stroke:none;fill:#9b3e2e;paint-order:normal">?</text>
+    </symbol>
+    <symbol id="sym-stair" viewBox="-16 -16 32 32" width="32" height="32" x="-16" y="-16" overflow="visible">
+      <path d="M-14,10 H-8 V4 H-2 V-2 H4 V-8 H10 V-13 M-14,10 V13 H10 M8,-2 V10 M12,-2 V10 M8,2 H12"/>
+    </symbol>
+    <symbol id="sym-bridgemark" viewBox="-16 -16 32 32" width="32" height="32" x="-16" y="-16" overflow="visible">
+      <path d="M-14,6 Q0,-10 14,6 M-14,6 V11 M14,6 V11 M-14,11 H14" fill="none"/>
+    </symbol>
+    <!-- district glyphs (decorative) -->
+    <symbol id="sym-market" viewBox="-16 -16 32 32" width="32" height="32" x="-16" y="-16" overflow="visible">
+      <path d="M-14,-4 L-12,-10 H12 L14,-4 Q10,0 7,-4 Q3.5,0 0,-4 Q-3.5,0 -7,-4 Q-10,0 -14,-4 Z M-11,-2 V10 M11,-2 V10 M-11,10 H11"/>
+    </symbol>
+    <symbol id="sym-dock" viewBox="-16 -16 32 32" width="32" height="32" x="-16" y="-16" overflow="visible">
+      <path d="M-14,8 H14 M-7,8 V-8 M7,8 V-8 M-11,-8 H-3 M3,-8 H11 M-14,12 Q-7,16 0,12 Q7,8 14,12" fill="none"/>
+    </symbol>
+    <symbol id="sym-lowq" viewBox="-16 -16 32 32" width="32" height="32" x="-16" y="-16" overflow="visible">
+      <path d="M-12,2 V-6 L-5,-12 L2,-6 V2 M4,2 V-4 L9,-9 L14,-4 V2 M-15,4 Q-8,0 0,4 Q8,8 15,4 M-15,9 Q-8,5 0,9 Q8,13 15,9" fill="none"/>
+    </symbol>
+  </defs>
+
+  <!-- paper -->
+  <rect width="1600" height="1000" fill="#e6dfcd"/>
+  <rect width="1600" height="1000" fill="#2b2622" filter="url(#grain)"/>
+
+  <!-- ground fills: surfaced Steps, the low quarter -->
+  <g id="ground">
+    <use href="#steps-island" fill="#c39a5c" opacity=".28"/>
+    <use href="#lowq-island" fill="#345d64" opacity=".09"/>
+    <use href="#lowq-island" fill="url(#hatch)"/>
+  </g>
+
+  <!-- the drowned city beneath -->
+  <g id="drowned-layer" clip-path="url(#drowned-clip)">
+    <rect width="1600" height="1000" fill="url(#ghost)"/>
+  </g>
+
+  <!-- terraces of the Steps -->
+  <g id="terraces">
+    <path class="terrace" d="M1372,330 C1372,420 1370,520 1348,600 C1340,650 1360,700 1398,775"/>
+    <path class="terrace" d="M1438,330 C1438,420 1436,520 1412,600 C1405,650 1425,700 1458,775"/>
+  </g>
+
+  <g id="water">
+<g class="shore">
+<path d="M-10,882 C150,862 300,898 480,872 S800,892 1000,866 S1300,900 1610,868 L1610,1010 L-10,1010 Z" />
+<path d="M150.0,-20.0 C154.2,8.3 178.3,96.7 175.0,150.0 C171.7,203.3 127.5,253.3 130.0,300.0 C132.5,346.7 172.5,386.7 190.0,430.0 C207.5,473.3 236.7,515.0 235.0,560.0 C233.3,605.0 191.7,660.0 180.0,700.0 C168.3,740.0 160.8,766.7 165.0,800.0 C169.2,833.3 198.3,883.3 205.0,900.0" stroke-width="26" />
+<path d="M400.0,-20.0 C395.0,3.3 365.0,73.3 370.0,120.0 C375.0,166.7 427.5,215.0 430.0,260.0 C432.5,305.0 399.2,346.7 385.0,390.0 C370.8,433.3 339.2,475.0 345.0,520.0 C350.8,565.0 401.7,615.0 420.0,660.0 C438.3,705.0 451.7,750.0 455.0,790.0 C458.3,830.0 442.5,881.7 440.0,900.0" stroke-width="31" />
+<path d="M720.0,-20.0 C727.5,6.7 767.5,88.3 765.0,140.0 C762.5,191.7 708.3,241.7 705.0,290.0 C701.7,338.3 729.2,381.7 745.0,430.0 C760.8,478.3 795.8,535.0 800.0,580.0 C804.2,625.0 784.2,663.3 770.0,700.0 C755.8,736.7 715.8,766.7 715.0,800.0 C714.2,833.3 756.7,883.3 765.0,900.0" stroke-width="45" />
+<path d="M960.0,-20.0 C955.8,5.0 929.2,85.0 935.0,130.0 C940.8,175.0 993.3,205.0 995.0,250.0 C996.7,295.0 956.7,351.7 945.0,400.0 C933.3,448.3 918.3,493.3 925.0,540.0 C931.7,586.7 969.2,636.7 985.0,680.0 C1000.8,723.3 1021.7,763.3 1020.0,800.0 C1018.3,836.7 982.5,883.3 975.0,900.0" stroke-width="32" />
+<path d="M1185.0,-20.0 C1191.7,8.3 1229.2,96.7 1225.0,150.0 C1220.8,203.3 1162.5,253.3 1160.0,300.0 C1157.5,346.7 1195.0,386.7 1210.0,430.0 C1225.0,473.3 1254.2,515.0 1250.0,560.0 C1245.8,605.0 1202.5,660.0 1185.0,700.0 C1167.5,740.0 1140.8,766.7 1145.0,800.0 C1149.2,833.3 1199.2,883.3 1210.0,900.0" stroke-width="33" />
+<path d="M1470.0,-20.0 C1467.5,8.3 1446.7,96.7 1455.0,150.0 C1463.3,203.3 1512.5,250.0 1520.0,300.0 C1527.5,350.0 1508.3,403.3 1500.0,450.0 C1491.7,496.7 1468.3,535.0 1470.0,580.0 C1471.7,625.0 1500.0,680.0 1510.0,720.0 C1520.0,760.0 1535.0,790.0 1530.0,820.0 C1525.0,850.0 1488.3,886.7 1480.0,900.0" stroke-width="28" />
+<path d="M172.0,190.0 C248.4,230.0 327.0,245.0 403.4,205.0" stroke-width="20" />
+<path d="M357.5,470.0 C488.6,515.0 623.7,515.0 754.8,470.0" stroke-width="22" />
+<path d="M736.3,225.0 C818.9,190.0 904.0,200.0 986.5,235.0" stroke-width="22" />
+<path d="M795.6,650.0 C851.7,690.0 909.6,690.0 965.7,650.0" stroke-width="22" />
+<path d="M932.5,480.0 C1029.8,450.0 1130.0,455.0 1227.3,485.0" stroke-width="23" />
+<path d="M1169.5,330.0 C1283.7,300.0 1401.3,305.0 1515.4,335.0" stroke-width="22" />
+<path d="M1164.2,750.0 C1279.7,790.0 1398.6,795.0 1514.1,755.0" stroke-width="22" />
+<path d="M186.0,700.0 C266.7,730.0 349.8,735.0 430.5,705.0" stroke-width="20" />
+<path d="M951.8,160.0 C1039.1,130.0 1129.1,135.0 1216.5,165.0" stroke-width="20" />
+</g>
+<g class="water">
+<path d="M-10,882 C150,862 300,898 480,872 S800,892 1000,866 S1300,900 1610,868 L1610,1010 L-10,1010 Z" />
+<path d="M150.0,-20.0 C154.2,8.3 178.3,96.7 175.0,150.0 C171.7,203.3 127.5,253.3 130.0,300.0 C132.5,346.7 172.5,386.7 190.0,430.0 C207.5,473.3 236.7,515.0 235.0,560.0 C233.3,605.0 191.7,660.0 180.0,700.0 C168.3,740.0 160.8,766.7 165.0,800.0 C169.2,833.3 198.3,883.3 205.0,900.0" stroke-width="19" data-ch="R1" />
+<path d="M400.0,-20.0 C395.0,3.3 365.0,73.3 370.0,120.0 C375.0,166.7 427.5,215.0 430.0,260.0 C432.5,305.0 399.2,346.7 385.0,390.0 C370.8,433.3 339.2,475.0 345.0,520.0 C350.8,565.0 401.7,615.0 420.0,660.0 C438.3,705.0 451.7,750.0 455.0,790.0 C458.3,830.0 442.5,881.7 440.0,900.0" stroke-width="24" data-ch="R2" />
+<path d="M720.0,-20.0 C727.5,6.7 767.5,88.3 765.0,140.0 C762.5,191.7 708.3,241.7 705.0,290.0 C701.7,338.3 729.2,381.7 745.0,430.0 C760.8,478.3 795.8,535.0 800.0,580.0 C804.2,625.0 784.2,663.3 770.0,700.0 C755.8,736.7 715.8,766.7 715.0,800.0 C714.2,833.3 756.7,883.3 765.0,900.0" stroke-width="38" data-ch="R3" />
+<path d="M960.0,-20.0 C955.8,5.0 929.2,85.0 935.0,130.0 C940.8,175.0 993.3,205.0 995.0,250.0 C996.7,295.0 956.7,351.7 945.0,400.0 C933.3,448.3 918.3,493.3 925.0,540.0 C931.7,586.7 969.2,636.7 985.0,680.0 C1000.8,723.3 1021.7,763.3 1020.0,800.0 C1018.3,836.7 982.5,883.3 975.0,900.0" stroke-width="25" data-ch="R4" />
+<path d="M1185.0,-20.0 C1191.7,8.3 1229.2,96.7 1225.0,150.0 C1220.8,203.3 1162.5,253.3 1160.0,300.0 C1157.5,346.7 1195.0,386.7 1210.0,430.0 C1225.0,473.3 1254.2,515.0 1250.0,560.0 C1245.8,605.0 1202.5,660.0 1185.0,700.0 C1167.5,740.0 1140.8,766.7 1145.0,800.0 C1149.2,833.3 1199.2,883.3 1210.0,900.0" stroke-width="26" data-ch="R5" />
+<path d="M1470.0,-20.0 C1467.5,8.3 1446.7,96.7 1455.0,150.0 C1463.3,203.3 1512.5,250.0 1520.0,300.0 C1527.5,350.0 1508.3,403.3 1500.0,450.0 C1491.7,496.7 1468.3,535.0 1470.0,580.0 C1471.7,625.0 1500.0,680.0 1510.0,720.0 C1520.0,760.0 1535.0,790.0 1530.0,820.0 C1525.0,850.0 1488.3,886.7 1480.0,900.0" stroke-width="21" data-ch="R6" />
+<path d="M172.0,190.0 C248.4,230.0 327.0,245.0 403.4,205.0" stroke-width="13" data-ch="B1" />
+<path d="M357.5,470.0 C488.6,515.0 623.7,515.0 754.8,470.0" stroke-width="15" data-ch="B2" />
+<path d="M736.3,225.0 C818.9,190.0 904.0,200.0 986.5,235.0" stroke-width="15" data-ch="B3" />
+<path d="M795.6,650.0 C851.7,690.0 909.6,690.0 965.7,650.0" stroke-width="15" data-ch="B4" />
+<path d="M932.5,480.0 C1029.8,450.0 1130.0,455.0 1227.3,485.0" stroke-width="16" data-ch="B5" />
+<path d="M1169.5,330.0 C1283.7,300.0 1401.3,305.0 1515.4,335.0" stroke-width="15" data-ch="B6" />
+<path d="M1164.2,750.0 C1279.7,790.0 1398.6,795.0 1514.1,755.0" stroke-width="15" data-ch="B7" />
+<path d="M186.0,700.0 C266.7,730.0 349.8,735.0 430.5,705.0" stroke-width="13" data-ch="B8" />
+<path d="M951.8,160.0 C1039.1,130.0 1129.1,135.0 1216.5,165.0" stroke-width="13" data-ch="B9" />
+</g>
+<g class="current">
+<path d="M150.0,-20.0 C154.2,8.3 178.3,96.7 175.0,150.0 C171.7,203.3 127.5,253.3 130.0,300.0 C132.5,346.7 172.5,386.7 190.0,430.0 C207.5,473.3 236.7,515.0 235.0,560.0 C233.3,605.0 191.7,660.0 180.0,700.0 C168.3,740.0 160.8,766.7 165.0,800.0 C169.2,833.3 198.3,883.3 205.0,900.0" stroke-width="3.4" />
+<path d="M400.0,-20.0 C395.0,3.3 365.0,73.3 370.0,120.0 C375.0,166.7 427.5,215.0 430.0,260.0 C432.5,305.0 399.2,346.7 385.0,390.0 C370.8,433.3 339.2,475.0 345.0,520.0 C350.8,565.0 401.7,615.0 420.0,660.0 C438.3,705.0 451.7,750.0 455.0,790.0 C458.3,830.0 442.5,881.7 440.0,900.0" stroke-width="4.3" />
+<path d="M720.0,-20.0 C727.5,6.7 767.5,88.3 765.0,140.0 C762.5,191.7 708.3,241.7 705.0,290.0 C701.7,338.3 729.2,381.7 745.0,430.0 C760.8,478.3 795.8,535.0 800.0,580.0 C804.2,625.0 784.2,663.3 770.0,700.0 C755.8,736.7 715.8,766.7 715.0,800.0 C714.2,833.3 756.7,883.3 765.0,900.0" stroke-width="6.8" />
+<path d="M960.0,-20.0 C955.8,5.0 929.2,85.0 935.0,130.0 C940.8,175.0 993.3,205.0 995.0,250.0 C996.7,295.0 956.7,351.7 945.0,400.0 C933.3,448.3 918.3,493.3 925.0,540.0 C931.7,586.7 969.2,636.7 985.0,680.0 C1000.8,723.3 1021.7,763.3 1020.0,800.0 C1018.3,836.7 982.5,883.3 975.0,900.0" stroke-width="4.5" />
+<path d="M1185.0,-20.0 C1191.7,8.3 1229.2,96.7 1225.0,150.0 C1220.8,203.3 1162.5,253.3 1160.0,300.0 C1157.5,346.7 1195.0,386.7 1210.0,430.0 C1225.0,473.3 1254.2,515.0 1250.0,560.0 C1245.8,605.0 1202.5,660.0 1185.0,700.0 C1167.5,740.0 1140.8,766.7 1145.0,800.0 C1149.2,833.3 1199.2,883.3 1210.0,900.0" stroke-width="4.7" />
+<path d="M1470.0,-20.0 C1467.5,8.3 1446.7,96.7 1455.0,150.0 C1463.3,203.3 1512.5,250.0 1520.0,300.0 C1527.5,350.0 1508.3,403.3 1500.0,450.0 C1491.7,496.7 1468.3,535.0 1470.0,580.0 C1471.7,625.0 1500.0,680.0 1510.0,720.0 C1520.0,760.0 1535.0,790.0 1530.0,820.0 C1525.0,850.0 1488.3,886.7 1480.0,900.0" stroke-width="3.8" />
+<path d="M172.0,190.0 C248.4,230.0 327.0,245.0 403.4,205.0" stroke-width="2.3" />
+<path d="M357.5,470.0 C488.6,515.0 623.7,515.0 754.8,470.0" stroke-width="2.7" />
+<path d="M736.3,225.0 C818.9,190.0 904.0,200.0 986.5,235.0" stroke-width="2.7" />
+<path d="M795.6,650.0 C851.7,690.0 909.6,690.0 965.7,650.0" stroke-width="2.7" />
+<path d="M932.5,480.0 C1029.8,450.0 1130.0,455.0 1227.3,485.0" stroke-width="2.9" />
+<path d="M1169.5,330.0 C1283.7,300.0 1401.3,305.0 1515.4,335.0" stroke-width="2.7" />
+<path d="M1164.2,750.0 C1279.7,790.0 1398.6,795.0 1514.1,755.0" stroke-width="2.7" />
+<path d="M186.0,700.0 C266.7,730.0 349.8,735.0 430.5,705.0" stroke-width="2.3" />
+<path d="M951.8,160.0 C1039.1,130.0 1129.1,135.0 1216.5,165.0" stroke-width="2.3" />
+</g>
+</g>
+
+  <!-- flood crest, 24 days ago -->
+  <g id="crest-layer">
+    <path class="crest" d="M300,792 C500,765 720,805 915,738 C985,712 1040,690 1095,672 C1160,650 1200,600 1218,520 C1232,440 1262,400 1312,372 C1362,345 1420,350 1482,378"/>
+    <text class="note" x="560" y="758" text-anchor="middle">the crest line, twenty-four days ago</text>
+  </g>
+
+  <!-- bridges -->
+  <g class="bridges">
+  <use href="#sym-bridge" transform="translate(411.7,330) rotate(205.2) scale(1.27)" />
+<use href="#sym-bridge" transform="translate(708.6,330) rotate(166.8) scale(1.73)" />
+<use href="#sym-bridge" transform="translate(984.7,300) rotate(200.1) scale(1.30)" />
+<use href="#sym-bridge" transform="translate(1170.7,350) rotate(157.0) scale(1.33)" />
+<use href="#sym-bridge" transform="translate(222.1,500) rotate(157.6) scale(1.10)" />
+<use href="#sym-bridge" transform="translate(923.7,505) rotate(183.7) scale(1.30)" />
+<use href="#sym-bridge" transform="translate(1236.2,492) rotate(157.8) scale(1.33)" />
+<use href="#sym-bridge" transform="translate(384.5,600) rotate(146.1) scale(1.27)" />
+<use href="#sym-bridge" transform="translate(789.6,650) rotate(199.1) scale(1.73)" />
+<use href="#sym-bridge" transform="translate(992.7,700) rotate(158.4) scale(1.30)" />
+<use href="#sym-bridge" transform="translate(1185.0,700) rotate(204.2) scale(1.33)" />
+<use href="#sym-bridge" transform="translate(715.0,800) rotate(183.1) scale(1.73)" />
+<use href="#sym-bridge" transform="translate(455.4,800) rotate(179.7) scale(1.27)" />
+<use href="#sym-bridge" transform="translate(169.1,740) rotate(193.1) scale(1.10)" />
+<use href="#sym-bridge" transform="translate(1486.3,500) rotate(198.2) scale(1.17)" />
+<use href="#sym-bridge" transform="translate(1521.6,760) rotate(163.1) scale(1.17)" />
+<use href="#sym-bridge" transform="translate(763.9,150) rotate(189.4) scale(1.73)" />
+<use href="#sym-bridge" transform="translate(394.6,180) rotate(149.7) scale(1.27)" />
+  </g>
+
+  <!-- day one's errand -->
+  <g id="route-layer">
+    <path class="route" d="M1275,500 L1228,492 C1150,470 1040,466 944,494 L928,505 C906,520 886,546 872,572" marker-end="url(#arrow)"/>
+  </g>
+
+  <!-- vignette -->
+  <rect width="1600" height="1000" fill="url(#vignette)" pointer-events="none"/>
+
+  <!-- unexplored -->
+  <g id="unknown">
+    <text class="note" x="290" y="430" text-anchor="middle">not yet walked</text>
+    <text class="note" x="850" y="130" text-anchor="middle">not yet walked</text>
+    <text class="note" x="1080" y="300" text-anchor="middle">not yet walked</text>
+    <text class="note" x="300" y="640" text-anchor="middle">not yet walked</text>
+  </g>
+
+  <!-- compass -->
+  <g id="compass" transform="translate(1548,84)">
+    <path d="M0,-34 L7,-7 L34,0 L7,7 L0,34 L-7,7 L-34,0 L-7,-7 Z" fill="#e6dfcd" stroke="#2b2622" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M0,-34 L7,-7 L0,0 Z" fill="#2b2622"/>
+    <circle r="3" fill="#2b2622"/>
+    <text x="0" y="-40" style="font-size:16px;text-anchor:middle;stroke:none">N</text>
+  </g>
+
+  <text class="foot" x="1580" y="978" text-anchor="end">Not to scale. Drawn from the party's own accounts; the city shifts with every flood.</text>
+  <text class="foot" x="20" y="978" text-anchor="start">The sea</text>
+
+  <!-- places (rendered by script) -->
+  <g id="city-layer"></g>
+  <g id="arc-layer">
+    <circle class="risings" cx="1275" cy="500" r="92"/>
+    <text class="note" x="1178" y="522" text-anchor="end">risings, all within three streets</text>
+  </g>
+</svg>
+  </div>
+  <aside class="panel">
+    <div id="card" class="kind-intro"></div>
+    <div class="places" id="places"></div>
+    <div class="legend">
+      <svg viewBox="0 0 26 16"><circle cx="13" cy="8" r="5" fill="#e6dfcd"/></svg><span>the living city</span>
+      <svg viewBox="0 0 26 16"><circle cx="13" cy="8" r="5" fill="#9b3e2e"/></svg><span>arc one, Nine Names</span>
+      <svg viewBox="0 0 26 16"><circle cx="13" cy="8" r="5" fill="none" stroke="#e6dfcd" stroke-dasharray="2 2"/></svg><span>unseen or unwalked</span>
+      <svg viewBox="0 0 26 16"><path d="M1,8 H25" stroke="#2b2622" stroke-width="2.6" stroke-dasharray="1 6" stroke-linecap="round" style="stroke:#c9bfa8"/></svg><span>day one's errand, landing to guild yard</span>
+      <svg viewBox="0 0 26 16"><path d="M1,8 H25" stroke="#7fa7ad" stroke-width="2" stroke-dasharray="7 5"/></svg><span>where the water stood at the crest</span>
+      <svg viewBox="0 0 26 16"><circle cx="13" cy="8" r="6" fill="none" stroke="#9b3e2e" stroke-dasharray="4 3"/></svg><span>the risings, within three streets of the landing</span>
+    </div>
+  </aside>
+</main>
+<script>
+const PLACES = [{"id": "city", "kind": "intro", "name": "The Confluence", "blurb": "A city built where a dozen rivers braid together before the sea: half the streets are canals and the other half bridges over them. The living city stands on a drowned one, and on a cycle the flood brings the old city up with it. Twenty-four days after the crest, the water is still dropping a row at a time.", "status": "Dawn, day two of the arc. Click any place for what the party knows about it."}, {"id": "archives", "kind": "city", "name": "The archive", "district": "THE ARCHIVES", "x": 575, "y": 262, "sym": "archive", "label": {"dx": 0, "dy": 36}, "dlabel": {"x": 573, "y": 192}, "blurb": "One of the Confluence's houses of scholarship: records, salvage, and the people whose work is understanding what the water returns. Aelrith's home base. Tessin Kell works here, and the Silthic folio is bound for his dry table.", "status": "Tessin Kell · allied · not yet on screen this arc"}, {"id": "chapter", "kind": "city", "name": "The Vorgun chapter-house", "x": 1085, "y": 588, "sym": "temple", "label": {"dx": 0, "dy": 38}, "blurb": "Small, old and undermanned: a temple with a drill-yard and no garrison. It takes in the dying without asking who they are, walks salvage across town, and is one of the few places in the city that knows what to do about the risen dead. Home base for Brann and Brogga; Halvi Dorn keeps it. The party long-rested here last night, and Denno is at the end of its long table.", "status": "Halvi Dorn · allied · holds two Potions of Healing"}, {"id": "lowq", "kind": "district", "name": "The low quarter", "district": "THE LOW QUARTER", "dlabel": {"x": 1100, "y": 748}, "sub": "goes under first, every cycle", "glyph": {"sym": "lowq", "x": 1100, "y": 800}, "blurb": "The poorest and wettest district, built half into the surfaced layers of the drowned city, so it goes under first and hardest every cycle. Home of the undeclared: unlicensed salvagers, families off boats with no manifest, anyone the city has no file on. When it floods the rescue is slow. Nova grew up here; his mother Ithe Vask made papers here for thirty years.", "status": "Nova's streets"}, {"id": "markets", "kind": "district", "name": "The markets", "district": "THE MARKETS", "dlabel": {"x": 592, "y": 575}, "glyph": {"sym": "market", "x": 592, "y": 612}, "blurb": "Where trade, salvage and rumour change hands. Whatever enters the interior or leaves for the sea is bought and sold somewhere along here first.", "status": ""}, {"id": "docks", "kind": "district", "name": "The docks", "district": "THE DOCKS", "dlabel": {"x": 640, "y": 848}, "glyph": {"sym": "dock", "x": 640, "y": 804}, "blurb": "Goods, people and rumour move by boat, and everything bound for the sea or the interior passes through the docks.", "status": ""}, {"id": "steps", "kind": "district", "name": "The Steps", "district": "THE STEPS", "dlabel": {"x": 1365, "y": 378}, "sub": "surfaced this cycle", "blurb": "A surfaced district: terraces of old vault-houses stepping down to the water, lifted into reach by this cycle's flood. A burial ground of the drowned city, four centuries under water. Seven or nine risings in fourteen days, all within three streets of the landing and nowhere else in the city.", "status": "risings · the ring on the map"}, {"id": "landing", "kind": "arc", "name": "The Steps landing", "x": 1275, "y": 500, "sym": "landing", "label": {"dx": 0, "dy": 34}, "blurb": "Sath Oru's winch frame. Her crew of nine has worked the Steps since day four after the crest, chiselling name-slates out of wall-niches for a buyer nobody has met; a man she calls “the clerk” brings the coin. All nine are now registered and Sath's price has been met, but she has not yet heard it from the party. Baske walked back here alone last night to tell her.", "status": "Sath Oru · neutral · watching Nova"}, {"id": "stripped", "kind": "arc", "name": "The Stripped House", "x": 1335, "y": 552, "sym": "house", "label": {"dx": 0, "dy": 36}, "blurb": "A vault-house of twenty-four niches, each a forearm-deep socket with a body folded inside. The slates were the doors; three bodies rose when theirs were taken. Twenty-one hand-cut names are now set and nothing here will rise again. First-light appointment: six of Sath's crew, two from the chapter-house and a boy, waiting at this door to be taught the method.", "status": "cleared · appointment at first light"}, {"id": "terrace2", "kind": "arc", "name": "The second terrace", "x": 1385, "y": 616, "sym": "terrace", "unseen": true, "label": {"dx": 0, "dy": 34}, "note": "two more stripped houses", "blurb": "Two more stripped vault-houses. Nobody has walked them. More terraces lie below the waterline that nobody has walked either.", "status": "unwalked"}, {"id": "yardwall", "kind": "arc", "name": "The yard-wall", "x": 1445, "y": 690, "sym": "slab", "unseen": true, "label": {"dx": 0, "dy": 36}, "note": "the deep part · unseen", "blurb": "Seven feet by four, set in the yard-wall in the deep part of the Steps. The last payment, bought in advance, due to come off at first light on day four when the sledge track goes dry. Nobody has read it or seen it. That it is the ground's master roll is Aelrith's inference, not a confirmed fact. Halvi's instruction: read it before anyone starts work.", "status": "unseen · the day-four clock"}, {"id": "wellers", "kind": "arc", "name": "Weller's Stair", "x": 1110, "y": 462, "sym": "stair", "label": {"dx": 0, "dy": -24}, "blurb": "The Cut: a drainage cut with a sluice gate, where the errand went wrong. Brogga pulled the jammed beam and drained it; three skeletons and a zombie went down; Denno came out alive. Nobody has looked under the barge tarpaulin.", "status": "cleared · tarpaulin unchecked"}, {"id": "bridge", "kind": "arc", "name": "The bridge", "x": 924, "y": 505, "sym": "bridgemark", "label": {"dx": -22, "dy": 8, "anchor": "end"}, "blurb": "Where the party took its first short rest, and where Brann tore a leaf from his travelling name-roll and wrote Denno a note to Halvi. “What's your other name?” “Haven't got one.” “Then I'll write Denno.”", "status": "short rest, day one"}, {"id": "guild", "kind": "arc", "name": "The guild yard", "x": 870, "y": 575, "sym": "guild", "label": {"dx": 0, "dy": 36}, "blurb": "Where the eleven crates were delivered and Aelrith pulled the manifest as of right: loaded at the Steps landing, crew “Oru, S.” with the licence column blank, consigned to O. Pell, Assistant Registrar, carriage paid in advance in cash. Nobody has told the guild anything.", "status": "guild uninformed"}, {"id": "rolls", "kind": "arc", "name": "The Rolls Office", "x": 840, "y": 322, "sym": "rolls", "label": {"dx": 0, "dy": 36}, "blurb": "The Salvage Rolls, three volumes, kept by Ondrey Pell, Assistant Registrar, who believes a discretionary provision lets him enter undeclared persons on an employer's attestation. All nine of Sath's crew are in the book; the “Rill” entry is struck, one ruled line, dated and initialled. The city's books are clean. Reopens this morning.", "status": "Pell · neutral · unsuspecting"}];
+const svgNS = "http://www.w3.org/2000/svg";
+const svg = document.getElementById("map");
+const cityLayer = document.getElementById("city-layer");
+const arcLayer = document.getElementById("arc-layer");
+const card = document.getElementById("card");
+const placesEl = document.getElementById("places");
+
+function el(name, attrs, text) {
+  const n = document.createElementNS(svgNS, name);
+  for (const k in attrs) n.setAttribute(k, attrs[k]);
+  if (text !== undefined) n.textContent = text;
+  return n;
+}
+
+function drawPlace(p) {
+  const g = el("g", { class: "place kind-" + p.kind + (p.unseen ? " unseen" : ""), "data-id": p.id, tabindex: "0", role: "button", "aria-label": p.name });
+  g.appendChild(el("circle", { class: "halo", cx: p.x, cy: p.y, r: 26 }));
+  g.appendChild(el("use", { href: "#sym-" + p.sym, class: "sym", x: p.x, y: p.y }));
+  const anchor = p.label.anchor || "middle";
+  g.appendChild(el("text", { class: "label", x: p.x + p.label.dx, y: p.y + p.label.dy, "text-anchor": anchor }, p.name));
+  if (p.note) g.appendChild(el("text", { class: "note", x: p.x + p.label.dx, y: p.y + p.label.dy + 18, "text-anchor": anchor }, p.note));
+  (p.kind === "arc" ? arcLayer : cityLayer).appendChild(g);
+}
+
+function drawDistrict(p) {
+  const g = el("g", { class: "district kind-" + p.kind, "data-id": p.id, tabindex: "0", role: "button", "aria-label": p.name });
+  const w = p.district.length * 19 + 24;
+  g.appendChild(el("rect", { class: "dhalo", x: p.dlabel.x - w / 2, y: p.dlabel.y - 24, width: w, height: p.sub ? 50 : 32, rx: 6 }));
+  g.appendChild(el("text", { class: "dlabel", x: p.dlabel.x, y: p.dlabel.y }, p.district));
+  if (p.sub) g.appendChild(el("text", { class: "dsub", x: p.dlabel.x, y: p.dlabel.y + 20 }, p.sub));
+  if (p.glyph) g.appendChild(el("use", { href: "#sym-" + p.glyph.sym, class: "glyph", x: p.glyph.x, y: p.glyph.y }));
+  cityLayer.appendChild(g);
+}
+
+PLACES.forEach(p => {
+  if (p.kind === "intro") return;
+  if (p.district && !p.x) drawDistrict(p);
+  else {
+    drawPlace(p);
+    if (p.district) drawDistrict(Object.assign({}, p, { x: undefined, id: p.id, kind: "district" }));
+  }
+});
+
+function show(id) {
+  const p = PLACES.find(q => q.id === id) || PLACES[0];
+  card.className = "kind-" + p.kind;
+  const eyebrow = p.kind === "arc" ? "Arc one · Nine Names" : p.kind === "district" ? "District" : p.kind === "city" ? "The living city" : "The city";
+  card.innerHTML = '<div class="eyebrow">' + eyebrow + '</div><h2></h2><p></p>' + (p.status ? '<div class="status"></div>' : '');
+  card.querySelector("h2").textContent = p.name;
+  card.querySelector("p").textContent = p.blurb;
+  if (p.status) card.querySelector(".status").textContent = p.status;
+  document.querySelectorAll(".active").forEach(n => n.classList.remove("active"));
+  document.querySelectorAll('[data-id="' + id + '"]').forEach(n => n.classList.add("active"));
+}
+
+svg.addEventListener("click", e => {
+  const g = e.target.closest("[data-id]");
+  if (g) show(g.getAttribute("data-id"));
+});
+svg.addEventListener("keydown", e => {
+  if (e.key === "Enter" || e.key === " ") {
+    const g = e.target.closest("[data-id]");
+    if (g) { e.preventDefault(); show(g.getAttribute("data-id")); }
+  }
+});
+
+// the list
+function section(title, items) {
+  const h = document.createElement("h3"); h.textContent = title;
+  const ul = document.createElement("ul");
+  items.forEach(p => {
+    const li = document.createElement("li");
+    li.className = "kind-" + p.kind + (p.unseen ? " unseen" : "");
+    const b = document.createElement("button"); b.type = "button"; b.setAttribute("data-id", p.id);
+    b.textContent = p.name;
+    if (p.status) { const s = document.createElement("small"); s.textContent = p.status; b.appendChild(s); }
+    b.addEventListener("click", () => show(p.id));
+    li.appendChild(b); ul.appendChild(li);
+  });
+  placesEl.appendChild(h); placesEl.appendChild(ul);
+}
+section("The living city", PLACES.filter(p => p.kind === "city" || p.kind === "district"));
+section("Arc one · Nine Names", PLACES.filter(p => p.kind === "arc"));
+
+// toggles
+const toggles = { "t-arc": "hide-arc", "t-route": "hide-route", "t-crest": "hide-crest", "t-drowned": "hide-drowned" };
+for (const id in toggles) {
+  document.getElementById(id).addEventListener("change", e => svg.classList.toggle(toggles[id], !e.target.checked));
+}
+const panelBtn = document.getElementById("t-panel");
+const sheet = document.querySelector(".sheet");
+const panel = document.querySelector("aside.panel");
+panelBtn.addEventListener("click", () => {
+  const hidden = document.body.classList.toggle("panel-hidden");
+  panelBtn.textContent = hidden ? "Show panel" : "Hide panel";
+  if (hidden) sheet.appendChild(card); else panel.insertBefore(card, panel.firstChild);
+});
+
+show("city");
+</script>
+</body>
+</html>
