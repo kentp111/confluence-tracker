@@ -46,6 +46,13 @@
     border-radius: 8px; padding: 0.3rem 0.6rem;
   }
   button:hover { border-color: var(--amber-dim); }
+  a.btn-link {
+    font: inherit; color: var(--ink); text-decoration: none; display: inline-block;
+    background: var(--panel-2); border: 1px solid var(--line);
+    border-radius: 8px; padding: 0.3rem 0.6rem;
+  }
+  a.btn-link:hover { border-color: var(--amber-dim); }
+  a.btn-link:focus-visible { outline: 2px solid var(--amber); outline-offset: 1px; }
   button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
     outline: 2px solid var(--amber); outline-offset: 1px;
   }
@@ -286,6 +293,7 @@
   <button class="btn-tide" id="openLoad">Load blob…</button>
   <button id="dmFetch" title="Load the newest blob the DM has posted. The page also checks on every refresh, and applies each posting only once.">From the DM ⟳</button>
   <button id="openExport">Export…</button>
+  <a class="btn-link" href="map.html" target="_blank" rel="noopener" title="The city map, as the party knows it — opens in its own tab">City map ↗</a>
   <button id="openHelp" title="Blob formats and how this page works">?</button>
   <span class="save-status" id="dmStatus"></span>
   <span class="save-status" id="saveStatus">—</span>
