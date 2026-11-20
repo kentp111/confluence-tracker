@@ -177,6 +177,9 @@
   .stepper { display: inline-flex; align-items: center; gap: 0.25rem; }
   .stepper button { width: 1.5rem; height: 1.5rem; padding: 0; font-weight: 700; line-height: 1; }
   .stepper .v { min-width: 1.5ch; text-align: center; font-weight: 650; font-variant-numeric: tabular-nums; }
+  .insp-face { flex: none; width: 1.7rem; height: 1.7rem; padding: 0; border-radius: 50%; font-size: 0.95rem; line-height: 1;
+    border: 2px solid var(--amber-dim); background: transparent; color: var(--ink-faint); cursor: pointer; }
+  .insp-face.on { background: var(--amber); border-color: var(--amber); color: #1b1408; box-shadow: 0 0 8px rgba(230,168,73,0.5); }
   .insp { display: inline-flex; align-items: center; gap: 0.4rem; cursor: pointer; user-select: none; }
   .insp-dot { width: 0.9rem; height: 0.9rem; border-radius: 50%; border: 2px solid var(--amber-dim); }
   .insp-dot.on { background: var(--amber); border-color: var(--amber); box-shadow: 0 0 8px rgba(230,168,73,0.5); }
@@ -672,7 +675,11 @@
       t.addEventListener("click", () => { c.acAlt = !c.acAlt; saveAll(); renderTracker(); });
       acBox.appendChild(t);
     }
-    head.append(nm, acBox);
+    const insp = el("button", "insp-face" + (c.inspiration ? " on" : ""), "★");
+    insp.title = c.inspiration ? "Heroic Inspiration — has it (tap to spend)" : "Heroic Inspiration — none (tap to give)";
+    insp.setAttribute("aria-label", insp.title);
+    insp.addEventListener("click", () => { c.inspiration = !c.inspiration; saveAll(); renderTracker(); });
+    head.append(nm, insp, acBox);
 
     const body = el("div", "card-body");
 
@@ -1152,7 +1159,10 @@
     document.getElementById("loadText").focus();
   });
   document.getElementById("loadCancel").addEventListener("click", closeAllModals);
-  document.getElementById("loadGo").addEventListener("click", () => applyBlob(document.getElementById("loadText").value));
+  document.getElementById("loadGo").addEventListener("click", () => {
+    if (applyBlob(document.getElementById("loadText").value))
+      dmSay("Pasted: " + document.getElementById("loadMsg").textContent + " (" + new Date().toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"}) + ")");
+  });
 
   document.getElementById("openExport").addEventListener("click", () => {
     document.getElementById("exportText").value = JSON.stringify(TRK, null, 2);
