@@ -1,209 +1,56 @@
 {
- "kind": "tracker",
- "v": 1,
- "characters": [
+ "kind": "scene",
+ "title": "Test Run — The Practice Vault",
+ "grid": [
+  3,
+  1
+ ],
+ "zones": [
   {
-   "name": "Brogga Kalder",
-   "ac": 15,
-   "maxHp": 38,
-   "curHp": 38,
-   "tempHp": 0,
-   "hd": {
-    "die": "d12",
-    "max": 3,
-    "used": 0,
-    "conMod": 3
-   },
-   "exhaustion": 0,
-   "inspiration": true,
-   "death": {
-    "succ": 0,
-    "fail": 0
-   },
-   "notes": "Concentration: —",
-   "resources": [
-    {
-     "name": "Rage",
-     "max": 3,
-     "used": 0,
-     "reset": "long",
-     "shortReturn": 1,
-     "hint": "short rest returns one use"
-    },
-    {
-     "name": "Stonecunning",
-     "max": 2,
-     "used": 0,
-     "reset": "long"
-    },
-    {
-     "name": "Healer's kit",
-     "max": 10,
-     "used": 0,
-     "reset": "none",
-     "hint": "restocked in the fiction, not by resting"
-    }
-   ]
-  },
-  {
-   "name": "Brann Kalder",
-   "ac": 18,
-   "maxHp": 27,
-   "curHp": 27,
-   "tempHp": 0,
-   "hd": {
-    "die": "d8",
-    "max": 3,
-    "used": 0,
-    "conMod": 2
-   },
-   "exhaustion": 0,
-   "inspiration": true,
-   "death": {
-    "succ": 0,
-    "fail": 0
-   },
-   "notes": "Concentration: —",
-   "resources": [
-    {
-     "name": "Slots · 1st",
-     "max": 4,
-     "used": 0,
-     "reset": "long"
-    },
-    {
-     "name": "Slots · 2nd",
-     "max": 2,
-     "used": 0,
-     "reset": "long"
-    },
-    {
-     "name": "Channel Divinity",
-     "max": 2,
-     "used": 0,
-     "reset": "short"
-    },
-    {
-     "name": "War Priest",
-     "max": 3,
-     "used": 0,
-     "reset": "short"
-    },
-    {
-     "name": "Healing Word · free",
-     "max": 1,
-     "used": 0,
-     "reset": "long",
-     "hint": "Magic Initiate's daily free cast"
-    },
-    {
-     "name": "Stonecunning",
-     "max": 2,
-     "used": 0,
-     "reset": "long"
-    }
-   ]
-  },
-  {
-   "name": "Nova Vask",
-   "ac": 14,
-   "maxHp": 24,
-   "curHp": 24,
-   "tempHp": 0,
-   "hd": {
-    "die": "d8",
-    "max": 3,
-    "used": 0,
-    "conMod": 2
-   },
-   "exhaustion": 0,
-   "inspiration": true,
-   "death": {
-    "succ": 0,
-    "fail": 0
-   },
-   "notes": "Concentration: —",
-   "resources": [
-    {
-     "name": "Pact slots · 2nd",
-     "max": 2,
-     "used": 0,
-     "reset": "short",
-     "hint": "both cast at 2nd level"
-    },
-    {
-     "name": "Magical Cunning",
-     "max": 1,
-     "used": 0,
-     "reset": "long",
-     "hint": "1-minute rite, one slot back"
-    },
-    {
-     "name": "Hellish Rebuke · free",
-     "max": 1,
-     "used": 0,
-     "reset": "long",
-     "hint": "Infernal Legacy"
-    }
-   ]
-  },
-  {
-   "name": "Aelrith",
-   "ac": 12,
-   "maxHp": 20,
-   "curHp": 20,
-   "tempHp": 0,
-   "hd": {
-    "die": "d6",
-    "max": 3,
-    "used": 0,
-    "conMod": 2
-   },
-   "exhaustion": 0,
-   "inspiration": true,
-   "death": {
-    "succ": 0,
-    "fail": 0
-   },
-   "notes": "Concentration: —",
-   "resources": [
-    {
-     "name": "Slots · 1st",
-     "max": 4,
-     "used": 0,
-     "reset": "long"
-    },
-    {
-     "name": "Slots · 2nd",
-     "max": 2,
-     "used": 0,
-     "reset": "long"
-    },
-    {
-     "name": "Mage Armor · free",
-     "max": 1,
-     "used": 1,
-     "reset": "long"
-    },
-    {
-     "name": "Detect Magic · free",
-     "max": 1,
-     "used": 0,
-     "reset": "long",
-     "hint": "High Elf lineage"
-    },
-    {
-     "name": "Arcane Recovery",
-     "max": 1,
-     "used": 0,
-     "reset": "long",
-     "hint": "spent on a short rest, returns on a long one"
-    }
+   "id": "stair",
+   "name": "The Stair",
+   "at": [
+    0,
+    0
    ],
-   "altAc": 15,
-   "altLabel": "Mage Armor",
-   "acAlt": true
+   "terrain": "stone steps — the way out"
+  },
+  {
+   "id": "floor",
+   "name": "Vault Floor",
+   "at": [
+    1,
+    0
+   ],
+   "terrain": "dry flagstones"
+  },
+  {
+   "id": "niches",
+   "name": "Niche Wall",
+   "at": [
+    2,
+    0
+   ],
+   "terrain": "fallen bones — difficult terrain"
   }
  ],
- "sent": "2026-11-20T03:54:28+00:00"
+ "enemies": [
+  {
+   "name": "Skeleton",
+   "count": 2,
+   "hp": 13,
+   "zone": "niches"
+  },
+  {
+   "name": "Zombie",
+   "hp": 15,
+   "zone": "niches"
+  }
+ ],
+ "pcs": [
+  "Brann Kalder",
+  "Aelrith",
+  "Hoot"
+ ],
+ "sent": "2026-11-20T03:57:40+00:00"
 }
